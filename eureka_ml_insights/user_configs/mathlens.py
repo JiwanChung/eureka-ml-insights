@@ -41,9 +41,11 @@ from eureka_ml_insights.configs import ExperimentConfig
 class MATHLENS_PIPELINE(ExperimentConfig):
     # mathlens_data_path: str = "../mathlens"
     mathlens_data_path: str = "../mm_reasoning/data/data/ours/geometry/mathlens"
+    mathlens_data_is_local: bool = True
+
     mathlens_setup_name: str = ""  # default
     mathlens_data_split: str = "test"
-    mathlens_question_key: str = "question"
+    mathlens_question_key: str = "question_vis"
     mathlens_use_images: bool = True
     mathlens_per_key_aggregation: list[tuple[str, str]] = []
 
@@ -71,6 +73,7 @@ class MATHLENS_PIPELINE(ExperimentConfig):
                             ),
                         ]
                     ),
+                    "load_data_from_disk": self.mathlens_data_is_local,
                 },
             ),
             prompt_template_path=os.path.join(

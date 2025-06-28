@@ -4,6 +4,7 @@ import os
 import re
 from abc import ABC, abstractmethod
 from io import BytesIO
+from pathlib import Path
 from typing import List, Optional
 
 import jsonlines
@@ -51,7 +52,9 @@ class DataLoader:
 
     def __len__(self):
         if self.total_lines is None:
-            log.info("Total data lines not provided, iterating through the data to get the total lines.")
+            log.info(
+                "Total data lines not provided, iterating through the data to get the total lines."
+            )
             with jsonlines.open(self.path, "r", loads=json.loads) as reader:
                 self.total_lines = sum(1 for _ in reader)
         return self.total_lines
@@ -159,7 +162,9 @@ class MMDataLoader(DataLoader):
 
         return image_column_names
 
-    def _gather_image_file_names(self, data, image_column_names: List[str] | str) -> list:
+    def _gather_image_file_names(
+        self, data, image_column_names: List[str] | str
+    ) -> list:
         """
         Get all image file names from the data dict and return as a list.
         args:
@@ -177,11 +182,15 @@ class MMDataLoader(DataLoader):
             else:
                 # some datasets store multiple images in multiple columns
                 images = [
-                    data[image_column_name] for image_column_name in image_column_names if (data[image_column_name])
+                    data[image_column_name]
+                    for image_column_name in image_column_names
+                    if (data[image_column_name])
                 ]
 
         if not images:
-            log.warning("No image files names were found in the data row. Thus no images will be passed to the model.")
+            log.warning(
+                "No image files names were found in the data row. Thus no images will be passed to the model."
+            )
 
         return images
 
@@ -229,7 +238,9 @@ class AzureDataAuthenticator:
         self.query_string = query_string
         self.secret_key_params = secret_key_params
         if self.query_string is None and self.secret_key_params is None:
-            raise ValueError("Either provide query_string or secret_key_params to load data from Azure.")
+            raise ValueError(
+                "Either provide query_string or secret_key_params to load data from Azure."
+            )
         if self.query_string is None:
             self.query_string = get_secret(**secret_key_params)
 
@@ -292,7 +303,9 @@ class JsonLinesWriter:
         self.mode = mode
 
     def __enter__(self):
-        self.writer = jsonlines.open(self.out_path, mode=self.mode, dumps=NumpyEncoder().encode)
+        self.writer = jsonlines.open(
+            self.out_path, mode=self.mode, dumps=NumpyEncoder().encode
+        )
         return self.writer
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -317,7 +330,9 @@ class JsonReader(DataReaderBase):
             with jsonlines.open(self.path, mode="r", loads=json.loads) as reader:
                 data = list(reader)
         else:
-            raise ValueError("JsonReader currently only supports json and jsonl format.")
+            raise ValueError(
+                "JsonReader currently only supports json and jsonl format."
+            )
         return data
 
 
@@ -330,7 +345,9 @@ class AzureBlobReader:
         args:
             blob_url: str, The Azure storage blob full URL.
         """
-        blob_client = BlobClient.from_blob_url(blob_url, credential=DefaultAzureCredential(), logger=self.logger)
+        blob_client = BlobClient.from_blob_url(
+            blob_url, credential=DefaultAzureCredential(), logger=self.logger
+        )
         # real all the bytes from the blob
         file = blob_client.download_blob().readall()
         file = file.decode("utf-8")
@@ -367,7 +384,9 @@ class AzureJsonReader(JsonReader, AzureBlobReader):
         elif self.format == ".jsonl":
             data = jsonlines.Reader(file.splitlines(), loads=json.loads)
         else:
-            raise ValueError("AzureJsonReader currently only supports json and jsonl format.")
+            raise ValueError(
+                "AzureJsonReader currently only supports json and jsonl format."
+            )
         return data
 
 
@@ -386,7 +405,9 @@ class HFJsonReader(JsonReader):
         """
         from huggingface_hub import hf_hub_download
 
-        cached_file_path = hf_hub_download(repo_id=repo_id, filename=filename, repo_type=repo_type)
+        cached_file_path = hf_hub_download(
+            repo_id=repo_id, filename=filename, repo_type=repo_type
+        )
         super().__init__(cached_file_path)
 
 
@@ -461,7 +482,13 @@ class DataReader:
             df = pd.read_csv(self.path, **self.kwargs)
         elif self.format == ".jsonl":
             log.info(f"Loading JSONL Data From {self.path}.")
-            df = pd.read_json(self.path, lines=True, convert_dates=False, convert_axes=False, **self.kwargs)
+            df = pd.read_json(
+                self.path,
+                lines=True,
+                convert_dates=False,
+                convert_axes=False,
+                **self.kwargs,
+            )
         else:
             log.info(f"Data format is: {self.format}, default to read as csv.")
             df = pd.read_csv(self.path, **self.kwargs)
@@ -548,7 +575,7 @@ class HFDataReader(DataReader):
 
         if image_base64:
             # create path to save image
-            file_path = os.path.join(cache_path, image_base64["path"])
+            file_path = os.path.join(cache_path, Path(image_base64["path"]).name)
 
             # only do this if the image doesn't already exist
             if not os.path.exists(file_path):
@@ -563,7 +590,9 @@ class HFDataReader(DataReader):
 
         return file_path
 
-    def _save_images(self, df: pd.DataFrame, cache_path: str, image_columns) -> pd.DataFrame:
+    def _save_images(
+        self, df: pd.DataFrame, cache_path: str, image_columns
+    ) -> pd.DataFrame:
         """
         Saves all base64 encoded image columns to a local cache path and updates the data frame.
         args:
@@ -577,7 +606,9 @@ class HFDataReader(DataReader):
         tqdm.pandas()
 
         for column in tqdm(image_columns, desc="Image Saving Progress:"):
-            df[column] = df[column].progress_apply(self._save_base64_to_image_file, args=(cache_path,))
+            df[column] = df[column].progress_apply(
+                self._save_base64_to_image_file, args=(cache_path,)
+            )
 
         return df
 
@@ -599,11 +630,11 @@ class HFDataReader(DataReader):
             image_columns = [
                 col
                 for col in hf_dataset.features
-                if hasattr(hf_dataset.features[col], "dtype") and hf_dataset.features[col].dtype == "PIL.Image.Image"
+                if hasattr(hf_dataset.features[col], "dtype")
+                and hf_dataset.features[col].dtype == "PIL.Image.Image"
             ]
 
             if image_columns:
-
                 # get the dir where the dataset is cached
                 cache_path = os.path.dirname(hf_dataset.cache_files[0]["filename"])
                 df = self._save_images(df, cache_path, image_columns)
@@ -630,7 +661,9 @@ class HFDataReader(DataReader):
                 dataset_dict = load_from_disk(self.path)
                 hf_dataset = [dataset_dict[split] for split in self.split]
             else:
-                hf_dataset = load_dataset(self.path, cache_dir=self.cache_dir, split=self.split)
+                hf_dataset = load_dataset(
+                    self.path, cache_dir=self.cache_dir, split=self.split
+                )
             for i, data_split in enumerate(hf_dataset):
                 task_df = self._hf_to_dataframe(data_split)
                 task_df["__hf_split"] = self.split[i]
@@ -641,7 +674,9 @@ class HFDataReader(DataReader):
                     dataset_dict = load_from_disk(self.path)
                     hf_dataset = [dataset_dict[task][split] for split in self.split]
                 else:
-                    hf_dataset = load_dataset(self.path, task, cache_dir=self.cache_dir, split=self.split)
+                    hf_dataset = load_dataset(
+                        self.path, task, cache_dir=self.cache_dir, split=self.split
+                    )
                 for i, data_split in enumerate(hf_dataset):
                     task_df = self._hf_to_dataframe(data_split)
                     task_df["__hf_task"] = task

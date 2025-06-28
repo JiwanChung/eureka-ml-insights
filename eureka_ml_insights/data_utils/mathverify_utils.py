@@ -18,7 +18,7 @@ class MathVerifyOutputEvaluator(DFTransformBase):
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         df[self.score_column_name] = df.apply(
-            lambda row: evaluate(row["model_output"], row["answer"]), axis=1
+            lambda row: evaluate(row["model_output"], row["ground_truth"]), axis=1
         )
         return df
 

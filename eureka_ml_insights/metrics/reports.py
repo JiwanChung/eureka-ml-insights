@@ -63,6 +63,10 @@ class Aggregator:
                 else:
                     raise NotImplementedError(f"Unsupported operation: {op}")
 
+                if key in data.columns:
+                    data = data.drop(columns=[key])
+        self._validate_data_types(data)
+
         if self.group_by:
             # if group_by is a list, create a new column that is concatenation of the str values
             if isinstance(self.group_by, list):
@@ -97,6 +101,9 @@ class Aggregator:
         with open(self.output_file, "w") as f:
             json.dump(self.aggregated_result, f)
 
+    def _validate_data_types(self, data):
+        pass
+
     def _validate_data(self, data, **kwargs):
         """Ensure that the input arguments are in the correct format."""
         if not isinstance(self.column_names, list) or not all(
@@ -120,7 +127,7 @@ class Aggregator:
                 )
                 or not all(
                     isinstance(k, str)
-                    and k in self.column_names
+                    # and k in self.column_names
                     and v in ["max", "min", "avg"]
                     for k, v in self.per_key_aggregation
                 )
@@ -141,9 +148,9 @@ class Aggregator:
 class NumericalAggregator(Aggregator):
     """This class is a base class for aggregators that require the data to be numeric."""
 
-    def _validate_data(self, data):
-        super()._validate_data(data)
-        """ Ensure that the data is numeric."""
+    def _validate_data_types(self, data):
+        # super()._validate_data(data)
+        """Ensure that the data is numeric."""
         for col in self.column_names:
             data[col] = pd.to_numeric(data[col], errors="raise")
 
