@@ -1,7 +1,9 @@
 """Evaluates output of models for Math-V dataset; following https://github.com/mathllm/MATH-V/tree/main/evaluation"""
 
 from dataclasses import dataclass
-from latex2sympy2 import latex2sympy
+
+# temporarily deprecating mathvision eval due to dependency conflict of latex2sympy2 with math-verify
+# from latex2sympy2 import latex2sympy
 import pandas as pd
 import re
 
@@ -14,10 +16,14 @@ class MathVisionOutputEvaluator(DFTransformBase):
     This class is for evaluating the output of models for the Math-V dataset,
     following the evaluation script from the Math-V repo.
     """
+
     score_column_name: str = "score"
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
-        df[self.score_column_name] = df.apply(lambda row: evaluate(row["model_output"], row["answer"], row["options"]), axis=1)
+        df[self.score_column_name] = df.apply(
+            lambda row: evaluate(row["model_output"], row["answer"], row["options"]),
+            axis=1,
+        )
         return df
 
 
@@ -27,51 +33,67 @@ def is_number(value):
         return True
     except ValueError:
         return False
-    
+
 
 def eval_tuple(s):
     """
     Evaluates the mathematical expressions within tuples or lists represented as strings.
-    
+
     Args:
         s (str): The string representation of a tuple or list.
                  E.g., "(a,b,c,...)" or "[a,b,c,...]"
-    
+
     Returns:
         str: A string representation of the tuple or list with evaluated expressions.
              Returns the original string if it doesn't match the expected format or if an error occurs.
-    
+
     Example:
         eval_tuple("(2*3, 5+2)") -> "(6,7)"
-    
+
     Note:
         This function relies on the latex2sympy function which is assumed to be defined elsewhere in the code.
     """
     # Split the string by commas to get individual elements
-    sl = s[1:-1].split(',')
-    
+    sl = s[1:-1].split(",")
+
     try:
         # Check if string is a tuple representation and has more than one element
-        if s[0] == '(' and s[-1] == ')' and len(sl) > 1:
+        if s[0] == "(" and s[-1] == ")" and len(sl) > 1:
             # Evaluate each element using latex2sympy and round the result to 2 decimal places
             # Skip evaluation if element is 'infty', 'a', or '-a'
-            s = ','.join([str(round(eval(str(latex2sympy(sub))),2)) 
-                          if 'infty' not in sub and sub not in ['a', '-a'] else sub for sub in sl])
+            s = ",".join(
+                [
+                    (
+                        str(round(eval(str(latex2sympy(sub))), 2))
+                        if "infty" not in sub and sub not in ["a", "-a"]
+                        else sub
+                    )
+                    for sub in sl
+                ]
+            )
             return f"({s})"
-        
+
         # Check if string is a list representation and has more than one element
-        elif s[0] == '[' and s[-1] == ']' and len(sl) > 1:
+        elif s[0] == "[" and s[-1] == "]" and len(sl) > 1:
             # Same evaluation process as for tuples
-            s = ','.join([str(round(eval(str(latex2sympy(sub))),2)) 
-                          if 'infty' not in sub and sub not in ['a', '-a'] else sub for sub in sl])
+            s = ",".join(
+                [
+                    (
+                        str(round(eval(str(latex2sympy(sub))), 2))
+                        if "infty" not in sub and sub not in ["a", "-a"]
+                        else sub
+                    )
+                    for sub in sl
+                ]
+            )
             return f"[{s}]"
-    
+
     except Exception:  # Catch any exceptions and return the original string
         return s
-    
+
     # Return original string if it doesn't match tuple or list format
     return s
-    
+
 
 def is_equal(asw: str, gt_asw: str) -> bool:
     """
@@ -95,13 +117,13 @@ def is_equal(asw: str, gt_asw: str) -> bool:
     # Check for empty strings after removing spaces and return False if any of them is empty.
     asw = asw.lower()
     gt_asw = gt_asw.lower()
-    
-    if asw.replace(' ', '') == '' or gt_asw.replace(' ', '') == '':
+
+    if asw.replace(" ", "") == "" or gt_asw.replace(" ", "") == "":
         return False
 
     if gt_asw.strip() == asw.strip():
         return True
-   
+
     # Convert the string to a tuple format.
     asw = eval_tuple(asw)
     gt_asw = eval_tuple(gt_asw)
@@ -113,7 +135,9 @@ def is_equal(asw: str, gt_asw: str) -> bool:
     try:
         # Convert LaTeX format to a sympy expression and evaluate both expressions.
         # If the evaluated results are close enough (up to 2 decimal places), return True.
-        if round(eval(str(latex2sympy(gt_asw))), 2) == round(eval(str(latex2sympy(asw))), 2):
+        if round(eval(str(latex2sympy(gt_asw))), 2) == round(
+            eval(str(latex2sympy(asw))), 2
+        ):
             return True
 
         else:
@@ -121,7 +145,7 @@ def is_equal(asw: str, gt_asw: str) -> bool:
     except:
         # If any error occurs during comparison, return False.
         return False
-    
+
 
 def in_area(id: str, area: str) -> bool:
     """Determine if a given ID falls within a specified area.
@@ -148,12 +172,12 @@ def in_area(id: str, area: str) -> bool:
     """
 
     # If the area is 'all', always return True
-    if area == 'all':
+    if area == "all":
         return True
-    
-    # Check if the ID contains the specified area or if it matches the pattern 
+
+    # Check if the ID contains the specified area or if it matches the pattern
     # for a test CSV related to that area
-    if f'/{area}/' in id or f'{area}_test.csv' in id:
+    if f"/{area}/" in id or f"{area}_test.csv" in id:
         return True
 
     # If none of the above conditions are met, return False
@@ -172,10 +196,11 @@ def extract_nums(s):
             pass
     return return_list
 
+
 def find_formula(step):
     assert step.count("<<") == step.count(">>") == 1
-    left, right = step.find("<<")+2, step.find(">>")
-    return step[left: right]
+    left, right = step.find("<<") + 2, step.find(">>")
+    return step[left:right]
 
 
 def extract_answer(completion):
@@ -195,17 +220,17 @@ def delete_extra_zero(n):
     except ValueError:  # If conversion fails
         print("None {}".format(n))  # Print the error message
         return n  # Return the original string
-        
+
     # If n is an integer after conversion, return its string representation
     if isinstance(n, int):
         return str(n)
-    
+
     # If n is a float after conversion
     if isinstance(n, float):
-        n = str(n).rstrip('0')  # Remove trailing zeros after the decimal point
+        n = str(n).rstrip("0")  # Remove trailing zeros after the decimal point
         # If number ends with a dot after removing zeros, convert to int
         # Otherwise, keep it as float and return its string representation
-        n = int(n.rstrip('.')) if n.endswith('.') else float(n)
+        n = int(n.rstrip(".")) if n.endswith(".") else float(n)
         return str(n)
 
 
@@ -221,12 +246,12 @@ def _fix_fracs(string):
 
         for substr in substrs:
             new_str += "\\frac"
-            # If the current substring already starts with a brace, 
+            # If the current substring already starts with a brace,
             # it's likely formatted correctly.
             if len(substr) > 0 and substr[0] == "{":
                 new_str += substr
             else:
-                # Ensure that the substring has at least 2 characters 
+                # Ensure that the substring has at least 2 characters
                 # for numerator and denominator.
                 try:
                     assert len(substr) >= 2
@@ -283,7 +308,7 @@ def _fix_a_slash_b(string):
 def _remove_right_units(string):
     # Split the string using "\\text{ " as the delimiter.
     splits = string.split("\\text{ ")
-    
+
     # Return the part of the string before the last occurrence of "\\text{ ".
     return splits[0]
 
@@ -295,7 +320,7 @@ def _fix_sqrt(string):
 
     # Split the string based on the "\sqrt" substring.
     splits = string.split("\\sqrt")
-    
+
     # The initial portion of the string before the first occurrence of "\sqrt".
     new_string = splits[0]
 
@@ -364,14 +389,14 @@ def _strip_string(string):
         string = string.split("\\approx")[-1]
 
     # Fix sqrt values not wrapped in curly braces. Note: The function _fix_sqrt is not provided.
-    if 'sqrt' in string:
+    if "sqrt" in string:
         string = _fix_sqrt(string)
 
     # Remove all spaces
     string = string.replace(" ", "")
 
     # Transform certain fraction notations to the desired format. Note: The function _fix_fracs is not provided.
-    if 'sqrt' in string:
+    if "sqrt" in string:
         string = _fix_fracs(string)
 
     # Convert 0.5 to its fraction representation
@@ -386,30 +411,37 @@ def _strip_string(string):
 
 def find_math_answer(s: str) -> str:
     s = s.lower()
-    if '{}' in s:
-        s = s.replace('{}', '')
+    if "{}" in s:
+        s = s.replace("{}", "")
 
     try:
-        pattern = re.compile('oxed{(.*)}', flags=re.S)
+        pattern = re.compile("oxed{(.*)}", flags=re.S)
         ans = pattern.findall(s)[-1]
-    except:     
-        ans = s  # If the pattern is not found, consider the entire string as the answer.
+    except:
+        ans = (
+            s  # If the pattern is not found, consider the entire string as the answer.
+        )
 
     # If there's a closing bracket without an opening bracket before it, consider everything before it.
-    if ans.find('}') != -1 and (ans.find('{') == -1 or  ans.find('}') < ans.find('{')):
-        ans = ans.split('}')[0]
+    if ans.find("}") != -1 and (ans.find("{") == -1 or ans.find("}") < ans.find("{")):
+        ans = ans.split("}")[0]
 
     # Extract the value after the equals sign or approx symbol.
-    ans = ans.split('=')[-1]
-    ans = ans.split('\\approx')[-1]
+    ans = ans.split("=")[-1]
+    ans = ans.split("\\approx")[-1]
 
     # Clean the string from various LaTeX formatting.
-    ans = ans.replace(" ", "").replace("\\,", "").replace('∞', '\\infty')
+    ans = ans.replace(" ", "").replace("\\,", "").replace("∞", "\\infty")
     ans = ans.replace("+\infty", "\infty").replace("\\\\", "\\").replace("\n", "")
-    ans = ans.replace('\\text', '').replace('\\mbox', '').replace('bmatrix', 'pmatrix')
-    ans = ans.replace("\\left", "").replace('\\right', '').replace("^{\\circ}", "")
+    ans = ans.replace("\\text", "").replace("\\mbox", "").replace("bmatrix", "pmatrix")
+    ans = ans.replace("\\left", "").replace("\\right", "").replace("^{\\circ}", "")
     ans = ans.replace("^\\circ", "").replace("{m}^3", "").replace("m^3", "")
-    ans = ans.replace("{units}", "").replace("units", "").replace("{km}", "").replace("km", "")
+    ans = (
+        ans.replace("{units}", "")
+        .replace("units", "")
+        .replace("{km}", "")
+        .replace("km", "")
+    )
 
     return _strip_string(ans)
 
@@ -417,7 +449,7 @@ def find_math_answer(s: str) -> str:
 def evaluate(model_output, answer, options):
     if not model_output or model_output == "":
         return False
-    
+
     gt_answer = answer if isinstance(answer, str) else str(answer)
     if len(options) > 0:
         gt_answer_value = options[ord(gt_answer) - ord("A")]
@@ -425,25 +457,51 @@ def evaluate(model_output, answer, options):
         gt_answer_value = ""
 
     model_output = model_output.strip()
-    for c in 'ABCDE':
-        if model_output.endswith(f" {c}.") or model_output.endswith(f" ({c}).") or model_output.startswith(f"{c}\n") or model_output.startswith(f"({c})\n") or model_output.startswith(f"({c}) {c}\n"):
+    for c in "ABCDE":
+        if (
+            model_output.endswith(f" {c}.")
+            or model_output.endswith(f" ({c}).")
+            or model_output.startswith(f"{c}\n")
+            or model_output.startswith(f"({c})\n")
+            or model_output.startswith(f"({c}) {c}\n")
+        ):
             model_output = c
-    if is_number(model_output.split('is ')[-1].rstrip('.')):
-        model_output = model_output.split('is ')[-1].rstrip('.')
-    if 'oxed{' not in model_output:
-        for flag in ['the final answer is', 'the answer is', 'the correct answer is', 'the answer should be']:
+    if is_number(model_output.split("is ")[-1].rstrip(".")):
+        model_output = model_output.split("is ")[-1].rstrip(".")
+    if "oxed{" not in model_output:
+        for flag in [
+            "the final answer is",
+            "the answer is",
+            "the correct answer is",
+            "the answer should be",
+        ]:
             raw_model_output = model_output
             model_output = model_output.split(flag)[-1].strip()
             if flag in raw_model_output:
-                model_output = model_output.split('\n')[0].split('. ')[0]
-            flag = flag.replace('the', 'The')
+                model_output = model_output.split("\n")[0].split(". ")[0]
+            flag = flag.replace("the", "The")
             raw_model_output = model_output
             model_output = model_output.split(flag)[-1].strip()
             if flag in raw_model_output:
-                model_output = model_output.split('\n')[0].split('. ')[0]
-    elif model_output.count('oxed{') > 1:
-        model_output = '\\boxed{' + model_output.split('oxed{')[-1]
-            
-        model_output = find_math_answer(model_output).replace('(a)', 'a').replace('(b)', 'b').replace('(c)', 'c').replace('(d)', 'd').replace('(e)', 'e').replace('{a}', 'a').replace('{b}', 'b').replace('{c}', 'c').replace('{d}', 'd').replace('{e}', 'e').rstrip('.').lstrip(':').strip()
+                model_output = model_output.split("\n")[0].split(". ")[0]
+    elif model_output.count("oxed{") > 1:
+        model_output = "\\boxed{" + model_output.split("oxed{")[-1]
+
+        model_output = (
+            find_math_answer(model_output)
+            .replace("(a)", "a")
+            .replace("(b)", "b")
+            .replace("(c)", "c")
+            .replace("(d)", "d")
+            .replace("(e)", "e")
+            .replace("{a}", "a")
+            .replace("{b}", "b")
+            .replace("{c}", "c")
+            .replace("{d}", "d")
+            .replace("{e}", "e")
+            .rstrip(".")
+            .lstrip(":")
+            .strip()
+        )
 
     return is_equal(gt_answer, model_output) or is_equal(gt_answer_value, model_output)

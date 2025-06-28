@@ -13,7 +13,9 @@ from dataclasses import dataclass
 import anthropic
 import requests
 import tiktoken
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+
+# from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+from azure.identity import AzureCliCredential, get_bearer_token_provider
 
 from eureka_ml_insights.secret_management import get_secret
 
@@ -88,6 +90,7 @@ class KeyBasedAuthMixIn:
             self.api_key = get_secret(**self.secret_key_params)
         return self.api_key
 
+
 @dataclass
 class EndpointModel(Model):
     """This class is used to interact with API-based models."""
@@ -151,7 +154,9 @@ class EndpointModel(Model):
                     response_time = model_response["response_time"]
                     n_output_tokens = model_response.get("n_output_tokens", None)
                 if self.chat_mode:
-                    previous_messages = self.update_chat_history(query_text, model_output, *args, **kwargs)
+                    previous_messages = self.update_chat_history(
+                        query_text, model_output, *args, **kwargs
+                    )
 
                 is_valid = True
                 break
@@ -169,7 +174,8 @@ class EndpointModel(Model):
                 "is_valid": is_valid,
                 "model_output": model_output,
                 "response_time": response_time,
-                "n_output_tokens": n_output_tokens or self.count_tokens(model_output, is_valid),
+                "n_output_tokens": n_output_tokens
+                or self.count_tokens(model_output, is_valid),
             }
         )
         if self.chat_mode:
@@ -179,6 +185,7 @@ class EndpointModel(Model):
     @abstractmethod
     def handle_request_error(self, e):
         raise NotImplementedError
+
 
 @dataclass
 class OfflineFileModel(Model):
@@ -192,8 +199,10 @@ class OfflineFileModel(Model):
         if not self.file_path:
             raise ValueError("file_path must be provided.")
         if not self.model_name:
-            raise ValueError("Model name must be provided as additional information on the model/system that was previous used for generating the file in file_path.")
-        
+            raise ValueError(
+                "Model name must be provided as additional information on the model/system that was previous used for generating the file in file_path."
+            )
+
         # Load the results from the file into a DataFrame that can be reused for reading all individual results later.
         try:
             self.df_results = pd.read_json(self.file_path, lines=True)
@@ -203,12 +212,14 @@ class OfflineFileModel(Model):
             raise ValueError(f"Error reading JSON from '{self.file_path}': {ve}")
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
-        
+
         # Check for required columns in the file
         required_columns = {"prompt", "model_output"}
         missing_columns = required_columns - set(self.df_results.columns)
         if missing_columns:
-            raise ValueError(f"Error: Missing required columns in file_path: {missing_columns}")
+            raise ValueError(
+                f"Error: Missing required columns in file_path: {missing_columns}"
+            )
         return None
 
     def generate(self, query_text, *args, **kwargs):
@@ -244,11 +255,13 @@ class OfflineFileModel(Model):
 
         model_output = None
         is_valid = False
-        response_time = 0 # This is a dummy value, as the response time is not available for offline files.
+        response_time = 0  # This is a dummy value, as the response time is not available for offline files.
         n_output_tokens = None
 
         try:
-            model_response = self.get_response(query_text, kwargs.get("data_repeat_id", None))
+            model_response = self.get_response(
+                query_text, kwargs.get("data_repeat_id", None)
+            )
             model_output = model_response["model_output"]
             is_valid = model_response["is_valid"]
         except Exception as e:
@@ -259,29 +272,37 @@ class OfflineFileModel(Model):
                 "is_valid": is_valid,
                 "model_output": model_output,
                 "response_time": response_time,
-                "n_output_tokens": n_output_tokens or self.count_tokens(model_output, is_valid),
+                "n_output_tokens": n_output_tokens
+                or self.count_tokens(model_output, is_valid),
             }
         )
         return response_dict
-    
+
     def get_response(self, target_prompt, target_repeat_id):
         if target_repeat_id is None:
-            filtered_df = self.df_results[(self.df_results['prompt'] == target_prompt)]
+            filtered_df = self.df_results[(self.df_results["prompt"] == target_prompt)]
         else:
-            filtered_df = self.df_results[(self.df_results['data_repeat_id'] == target_repeat_id) & (self.df_results['prompt'] == target_prompt)]
-
+            filtered_df = self.df_results[
+                (self.df_results["data_repeat_id"] == target_repeat_id)
+                & (self.df_results["prompt"] == target_prompt)
+            ]
 
         # Check if a matching record exists
         if not filtered_df.empty:
             if len(filtered_df) > 1:
-                logging.warning(f"Warning: More than one matching record found ({len(filtered_df)} records). Returning the first one.")
-            model_output = str(filtered_df.iloc[0]['model_output'])
+                logging.warning(
+                    f"Warning: More than one matching record found ({len(filtered_df)} records). Returning the first one."
+                )
+            model_output = str(filtered_df.iloc[0]["model_output"])
             # If the model output is empty, return None and is_valid as False
             if len(model_output) == 0:
                 return {"model_output": None, "is_valid": False}
-            return {"model_output": filtered_df.iloc[0]['model_output'], "is_valid": True}
+            return {
+                "model_output": filtered_df.iloc[0]["model_output"],
+                "is_valid": True,
+            }
         else:
-            return {"model_output": None, "is_valid": False}    
+            return {"model_output": None, "is_valid": False}
 
 
 @dataclass
@@ -296,7 +317,13 @@ class RestEndpointModel(EndpointModel, KeyBasedAuthMixIn):
     do_sample: bool = True
     timeout: int = None
 
-    def create_request(self, text_prompt, query_images=None, system_message=None, previous_messages=None):
+    def create_request(
+        self,
+        text_prompt,
+        query_images=None,
+        system_message=None,
+        previous_messages=None,
+    ):
         """Creates a request for the model."""
         messages = []
         if system_message:
@@ -316,7 +343,9 @@ class RestEndpointModel(EndpointModel, KeyBasedAuthMixIn):
             }
         }
         if query_images:
-            raise NotImplementedError("Images are not supported for RestEndpointModel endpoints yet.")
+            raise NotImplementedError(
+                "Images are not supported for RestEndpointModel endpoints yet."
+            )
 
         body = str.encode(json.dumps(data))
         # The azureml-model-deployment header will force the request to go to a specific deployment.
@@ -374,7 +403,9 @@ class ServerlessAzureRestEndpointModel(EndpointModel, KeyBasedAuthMixIn):
                 "extra-parameters": "pass-through",
             }
         except ValueError:
-            self.bearer_token_provider = get_bearer_token_provider(DefaultAzureCredential(), self.auth_scope)
+            self.bearer_token_provider = get_bearer_token_provider(
+                AzureCliCredential(), self.auth_scope
+            )
             self.headers = {
                 "Content-Type": "application/json",
                 "Authorization": ("Bearer " + self.bearer_token_provider()),
@@ -386,7 +417,13 @@ class ServerlessAzureRestEndpointModel(EndpointModel, KeyBasedAuthMixIn):
             }
 
     @abstractmethod
-    def create_request(self, text_prompt, query_images=None, system_message=None, previous_messages=None):
+    def create_request(
+        self,
+        text_prompt,
+        query_images=None,
+        system_message=None,
+        previous_messages=None,
+    ):
         # Exact model parameters are model-specific.
         # The method cannot be implemented unless the model being deployed is known.
         raise NotImplementedError
@@ -433,7 +470,13 @@ class LlamaServerlessAzureRestEndpointModel(ServerlessAzureRestEndpointModel):
     skip_special_tokens: bool = False
     ignore_eos: bool = False
 
-    def create_request(self, text_prompt, query_images=None, system_message=None, previous_messages=None):
+    def create_request(
+        self,
+        text_prompt,
+        query_images=None,
+        system_message=None,
+        previous_messages=None,
+    ):
         messages = []
         if system_message:
             messages.append({"role": "system", "content": system_message})
@@ -442,7 +485,9 @@ class LlamaServerlessAzureRestEndpointModel(ServerlessAzureRestEndpointModel):
         user_content = text_prompt
         if query_images:
             if len(query_images) > 1:
-                raise ValueError("Llama vision model does not support more than 1 image.")
+                raise ValueError(
+                    "Llama vision model does not support more than 1 image."
+                )
             encoded_images = self.base64encode(query_images)
             user_content = [
                 {"type": "text", "text": text_prompt},
@@ -488,14 +533,22 @@ class MistralServerlessAzureRestEndpointModel(ServerlessAzureRestEndpointModel):
             self.top_p = 1
         super().__post_init__()
 
-    def create_request(self, text_prompt, query_images=None, system_message=None, previous_messages=None):
+    def create_request(
+        self,
+        text_prompt,
+        query_images=None,
+        system_message=None,
+        previous_messages=None,
+    ):
         messages = []
         if system_message:
             messages.append({"role": "system", "content": system_message})
         if previous_messages:
             messages.extend(previous_messages)
         if query_images:
-            raise NotImplementedError("Images are not supported for MistralServerlessAzureRestEndpointModel endpoints.")
+            raise NotImplementedError(
+                "Images are not supported for MistralServerlessAzureRestEndpointModel endpoints."
+            )
         messages.append({"role": "user", "content": text_prompt})
         data = {
             "messages": messages,
@@ -519,7 +572,13 @@ class DeepseekR1ServerlessAzureRestEndpointModel(ServerlessAzureRestEndpointMode
     top_p: float = 0.95
     presence_penalty: float = 0
 
-    def create_request(self, text_prompt, query_images=None, system_message=None, previous_messages=None):
+    def create_request(
+        self,
+        text_prompt,
+        query_images=None,
+        system_message=None,
+        previous_messages=None,
+    ):
         messages = []
         if system_message:
             messages.append({"role": "system", "content": system_message})
@@ -547,7 +606,13 @@ class OpenAICommonRequestResponseMixIn:
     This mixin class defines the request and response handling for most OpenAI models.
     """
 
-    def create_request(self, text_prompt, query_images=None, system_message=None, previous_messages=None):
+    def create_request(
+        self,
+        text_prompt,
+        query_images=None,
+        system_message=None,
+        previous_messages=None,
+    ):
         messages = []
         if system_message:
             messages.append({"role": "system", "content": system_message})
@@ -606,7 +671,9 @@ class AzureOpenAIClientMixIn:
     def get_client(self):
         from openai import AzureOpenAI
 
-        token_provider = get_bearer_token_provider(DefaultAzureCredential(), self.auth_scope)
+        token_provider = get_bearer_token_provider(
+            AzureCliCredential(), self.auth_scope
+        )
         return AzureOpenAI(
             azure_endpoint=self.url,
             api_version=self.api_version,
@@ -641,7 +708,9 @@ class DirectOpenAIClientMixIn(KeyBasedAuthMixIn):
 
 
 @dataclass
-class AzureOpenAIModel(OpenAICommonRequestResponseMixIn, AzureOpenAIClientMixIn, EndpointModel):
+class AzureOpenAIModel(
+    OpenAICommonRequestResponseMixIn, AzureOpenAIClientMixIn, EndpointModel
+):
     """This class is used to interact with Azure OpenAI models."""
 
     url: str = None
@@ -660,7 +729,9 @@ class AzureOpenAIModel(OpenAICommonRequestResponseMixIn, AzureOpenAIClientMixIn,
 
 
 @dataclass
-class DirectOpenAIModel(OpenAICommonRequestResponseMixIn, DirectOpenAIClientMixIn, EndpointModel):
+class DirectOpenAIModel(
+    OpenAICommonRequestResponseMixIn, DirectOpenAIClientMixIn, EndpointModel
+):
     """This class is used to interact with OpenAI models dirctly (not through Azure)"""
 
     model_name: str = None
@@ -680,10 +751,18 @@ class DirectOpenAIModel(OpenAICommonRequestResponseMixIn, DirectOpenAIClientMixI
 
 
 class OpenAIOModelsRequestResponseMixIn:
-    def create_request(self, text_prompt, query_images=None, system_message=None, previous_messages=None):
+    def create_request(
+        self,
+        text_prompt,
+        query_images=None,
+        system_message=None,
+        previous_messages=None,
+    ):
         messages = []
         if system_message and "o1-preview" in self.model_name:
-            logging.warning("System and developer messages are not supported by OpenAI O1 preview model.")
+            logging.warning(
+                "System and developer messages are not supported by OpenAI O1 preview model."
+            )
         elif system_message:
             # Developer messages are the new system messages:
             # Starting with o1-2024-12-17, o1 models support developer messages rather than system messages,
@@ -718,7 +797,9 @@ class OpenAIOModelsRequestResponseMixIn:
         start_time = time.time()
         if "o1-preview" in self.model_name:
             if self.reasoning_effort == "high":
-                logging.error("Reasoning effort is not supported by OpenAI O1 preview model.")
+                logging.error(
+                    "Reasoning effort is not supported by OpenAI O1 preview model."
+                )
             completion = self.client.chat.completions.create(
                 model=self.model_name,
                 seed=self.seed,
@@ -753,7 +834,9 @@ class OpenAIOModelsRequestResponseMixIn:
 
 
 @dataclass
-class DirectOpenAIOModel(OpenAIOModelsRequestResponseMixIn, DirectOpenAIClientMixIn, EndpointModel):
+class DirectOpenAIOModel(
+    OpenAIOModelsRequestResponseMixIn, DirectOpenAIClientMixIn, EndpointModel
+):
     model_name: str = None
     temperature: float = 1
     # Not used currently, because the API throws:
@@ -774,7 +857,9 @@ class DirectOpenAIOModel(OpenAIOModelsRequestResponseMixIn, DirectOpenAIClientMi
 
 
 @dataclass
-class AzureOpenAIOModel(OpenAIOModelsRequestResponseMixIn, AzureOpenAIClientMixIn, EndpointModel):
+class AzureOpenAIOModel(
+    OpenAIOModelsRequestResponseMixIn, AzureOpenAIClientMixIn, EndpointModel
+):
     url: str = None
     model_name: str = None
     temperature: float = 1
@@ -818,10 +903,18 @@ class GeminiModel(EndpointModel, KeyBasedAuthMixIn):
             HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
         }
         self.gen_config = genai.GenerationConfig(
-            max_output_tokens=self.max_tokens, temperature=self.temperature, top_p=self.top_p
+            max_output_tokens=self.max_tokens,
+            temperature=self.temperature,
+            top_p=self.top_p,
         )
 
-    def create_request(self, text_prompt, query_images=None, system_message=None, previous_messages=None):
+    def create_request(
+        self,
+        text_prompt,
+        query_images=None,
+        system_message=None,
+        previous_messages=None,
+    ):
         import google.generativeai as genai
 
         if self.model_name == "gemini-1.0-pro":
@@ -829,7 +922,9 @@ class GeminiModel(EndpointModel, KeyBasedAuthMixIn):
                 logging.warning("System messages are not supported for Gemini 1.0 Pro.")
             self.model = genai.GenerativeModel(self.model_name)
         else:
-            self.model = genai.GenerativeModel(self.model_name, system_instruction=system_message)
+            self.model = genai.GenerativeModel(
+                self.model_name, system_instruction=system_message
+            )
 
         if query_images:
             return [text_prompt] + query_images
@@ -882,7 +977,10 @@ class GeminiModel(EndpointModel, KeyBasedAuthMixIn):
         """
         # Handling cases where the model explicitly blocks prompts and provides a reason for it.
         # In these cases, there is no need to make a new attempt as the model will continue to explicitly block the request, do_return = True.
-        if e.__class__.__name__ == "ValueError" and gemini_response.prompt_feedback.block_reason > 0:
+        if (
+            e.__class__.__name__ == "ValueError"
+            and gemini_response.prompt_feedback.block_reason > 0
+        ):
             logging.warning(
                 f"Attempt failed due to explicitly blocked input prompt: {e} Block Reason {gemini_response.prompt_feedback.block_reason}"
             )
@@ -891,11 +989,15 @@ class GeminiModel(EndpointModel, KeyBasedAuthMixIn):
         # In these cases, there is no need to make a new attempt as the model will continue to implicitly block the request, do_return = True.
         # Note that, in some cases, the model may still provide a finish reason as shown here https://ai.google.dev/api/generate-content?authuser=2#FinishReason
         elif e.__class__.__name__ == "IndexError" and len(gemini_response.parts) == 0:
-            logging.warning(f"Attempt failed due to implicitly blocked input prompt and empty model output: {e}")
+            logging.warning(
+                f"Attempt failed due to implicitly blocked input prompt and empty model output: {e}"
+            )
             # For cases where there are some response candidates do_return is still True because in most cases these candidates are incomplete.
             # Trying again may not necessarily help, unless in high temperature regimes.
             if len(gemini_response.candidates) > 0:
-                logging.warning(f"The response is not empty and has : {len(gemini_response.candidates)} candidates")
+                logging.warning(
+                    f"The response is not empty and has : {len(gemini_response.candidates)} candidates"
+                )
                 logging.warning(
                     f"Finish Reason for the first answer candidate is: {gemini_response.candidates[0].finish_reason}"
                 )
@@ -1069,7 +1171,9 @@ class HuggingFaceModel(Model):
         response_dict.update(
             {
                 "is_valid": is_valid,
-                "n_output_tokens": self.count_tokens(response_dict["model_output"], response_dict["is_valid"]),
+                "n_output_tokens": self.count_tokens(
+                    response_dict["model_output"], response_dict["is_valid"]
+                ),
             }
         )
         return response_dict
@@ -1167,7 +1271,9 @@ class LLaVAHuggingFaceModel(HuggingFaceModel):
             self.processor = AutoProcessor.from_pretrained(self.model_name)
 
     def _generate(self, text_prompt, query_images=None):
-        inputs = self.processor(text=text_prompt, images=query_images, return_tensors="pt").to(self.device)
+        inputs = self.processor(
+            text=text_prompt, images=query_images, return_tensors="pt"
+        ).to(self.device)
         start_time = time.time()
         output_ids = self.model.generate(
             **inputs,
@@ -1192,10 +1298,19 @@ class LLaVAHuggingFaceModel(HuggingFaceModel):
     def generate(self, text_prompt, query_images=None, system_message=None):
 
         if query_images and len(query_images) > 1:
-            logging.error(f"Not implemented for more than 1 image. {len(query_images)} images are in the prompt")
-            return {"model_output": None, "is_valid": False, "response_time": None, "n_output_tokens": None}
+            logging.error(
+                f"Not implemented for more than 1 image. {len(query_images)} images are in the prompt"
+            )
+            return {
+                "model_output": None,
+                "is_valid": False,
+                "response_time": None,
+                "n_output_tokens": None,
+            }
 
-        return super().generate(text_prompt, query_images=query_images, system_message=system_message)
+        return super().generate(
+            text_prompt, query_images=query_images, system_message=system_message
+        )
 
     def model_template_fn(self, text_prompt, system_message=None):
         text_prompt = f"<image>\n{text_prompt}"
@@ -1264,12 +1379,14 @@ class LLaVAModel(LLaVAHuggingFaceModel):
 
         image_sizes = [x.size for x in query_images]
 
-        images_tensor = process_images(query_images, self.processor, self.model.config).to(
-            self.device, dtype=torch.float16
-        )
+        images_tensor = process_images(
+            query_images, self.processor, self.model.config
+        ).to(self.device, dtype=torch.float16)
 
         input_ids = (
-            tokenizer_image_token(text_prompt, self.tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt")
+            tokenizer_image_token(
+                text_prompt, self.tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt"
+            )
             .unsqueeze(0)
             .to(self.device)
         )
@@ -1288,7 +1405,9 @@ class LLaVAModel(LLaVAHuggingFaceModel):
             )
             end_time = time.time()
 
-        model_output = self.tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
+        model_output = self.tokenizer.batch_decode(
+            output_ids, skip_special_tokens=True
+        )[0].strip()
         response_time = end_time - start_time
         return {
             "model_output": model_output,
@@ -1444,18 +1563,28 @@ class _LocalVLLMDeploymentHandler:
 
         # If the user passes ports, check if the servers are running and populate clients accordingly.
         if self.ports:
-            healthy_server_urls = ["http://0.0.0.0:" + port + "/v1" for port in self.get_healthy_ports()]
+            healthy_server_urls = [
+                "http://0.0.0.0:" + port + "/v1" for port in self.get_healthy_ports()
+            ]
             if len(healthy_server_urls) > 0:
                 logging.info(f"Found {len(healthy_server_urls)} healthy servers.")
-                return [OpenAIClient(base_url=url, api_key="none") for url in healthy_server_urls]
+                return [
+                    OpenAIClient(base_url=url, api_key="none")
+                    for url in healthy_server_urls
+                ]
 
         # Even if the user doesn't pass ports, we can check if there happen to be deployed servers.
         # There is no guarantee that the servers are hosting the correct model.
         self.ports = [str(8000 + i) for i in range(self.num_servers)]
-        healthy_server_urls = ["http://0.0.0.0:" + port + "/v1" for port in self.get_healthy_ports()]
+        healthy_server_urls = [
+            "http://0.0.0.0:" + port + "/v1" for port in self.get_healthy_ports()
+        ]
         if len(healthy_server_urls) == self.num_servers:
             logging.info(f"Found {len(healthy_server_urls)} healthy servers.")
-            return [OpenAIClient(base_url=url, api_key="none") for url in healthy_server_urls]
+            return [
+                OpenAIClient(base_url=url, api_key="none")
+                for url in healthy_server_urls
+            ]
 
         # If that didn't work, let's deploy and wait for servers to come online.
         self.deploy_servers()
@@ -1465,10 +1594,17 @@ class _LocalVLLMDeploymentHandler:
             healthy_ports = self.get_healthy_ports()
             if len(healthy_ports) == self.num_servers:
                 logging.info(f"All {self.num_servers} servers are online.")
-                healthy_server_urls = ["http://0.0.0.0:" + port + "/v1" for port in healthy_ports]
-                return [OpenAIClient(base_url=url, api_key="none") for url in healthy_server_urls]
+                healthy_server_urls = [
+                    "http://0.0.0.0:" + port + "/v1" for port in healthy_ports
+                ]
+                return [
+                    OpenAIClient(base_url=url, api_key="none")
+                    for url in healthy_server_urls
+                ]
             else:
-                logging.info(f"Waiting for {self.num_servers - len(healthy_ports)} more servers to come online.")
+                logging.info(
+                    f"Waiting for {self.num_servers - len(healthy_ports)} more servers to come online."
+                )
         # If we get here, we timed out waiting for servers to come online.
         raise RuntimeError(f"Failed to start all servers.")
 
@@ -1487,7 +1623,9 @@ class _LocalVLLMDeploymentHandler:
     def deploy_servers(self):
         """Deploy vLLM servers in background threads using the specified parameters."""
 
-        logging.info(f"No vLLM servers are running. Starting {self.num_servers} new servers at {self.ports}.")
+        logging.info(
+            f"No vLLM servers are running. Starting {self.num_servers} new servers at {self.ports}."
+        )
         import datetime
         import os
 
@@ -1500,7 +1638,9 @@ class _LocalVLLMDeploymentHandler:
             port = 8000 + index
             log_file = os.path.join(log_dir, f"{port}.log")
             self.logs.append(log_file)
-            background_thread = threading.Thread(target=lambda: self.deploy_server(index, gpus_per_port, log_file))
+            background_thread = threading.Thread(
+                target=lambda: self.deploy_server(index, gpus_per_port, log_file)
+            )
             background_thread.daemon = True
             background_thread.start()
 
@@ -1614,18 +1754,20 @@ class LocalVLLMModel(OpenAICommonRequestResponseMixIn, EndpointModel):
         if self.model_name not in local_vllm_deployment_handlers:
             with local_vllm_model_lock:
                 if self.model_name not in local_vllm_deployment_handlers:
-                    local_vllm_deployment_handlers[self.model_name] = _LocalVLLMDeploymentHandler(
-                        model_name=self.model_name,
-                        num_servers=self.num_servers,
-                        trust_remote_code=self.trust_remote_code,
-                        pipeline_parallel_size=self.pipeline_parallel_size,
-                        tensor_parallel_size=self.tensor_parallel_size,
-                        dtype=self.dtype,
-                        quantization=self.quantization,
-                        seed=self.seed,
-                        gpu_memory_utilization=self.gpu_memory_utilization,
-                        cpu_offload_gb=self.cpu_offload_gb,
-                        ports=self.ports,
+                    local_vllm_deployment_handlers[self.model_name] = (
+                        _LocalVLLMDeploymentHandler(
+                            model_name=self.model_name,
+                            num_servers=self.num_servers,
+                            trust_remote_code=self.trust_remote_code,
+                            pipeline_parallel_size=self.pipeline_parallel_size,
+                            tensor_parallel_size=self.tensor_parallel_size,
+                            dtype=self.dtype,
+                            quantization=self.quantization,
+                            seed=self.seed,
+                            gpu_memory_utilization=self.gpu_memory_utilization,
+                            cpu_offload_gb=self.cpu_offload_gb,
+                            ports=self.ports,
+                        )
                     )
 
         return local_vllm_deployment_handlers[self.model_name]
@@ -1651,7 +1793,13 @@ class ClaudeModel(EndpointModel, KeyBasedAuthMixIn):
             timeout=self.timeout,
         )
 
-    def create_request(self, text_prompt, query_images=None, system_message=None, previous_messages=None):
+    def create_request(
+        self,
+        text_prompt,
+        query_images=None,
+        system_message=None,
+        previous_messages=None,
+    ):
         messages = []
         user_content = text_prompt
         if previous_messages:
@@ -1719,10 +1867,16 @@ class ClaudeReasoningModel(ClaudeModel):
         redacted_thinking_output = None
         response_dict = {}
         if self.top_p is not None:
-            logging.warning("top_p is not supported for claude reasoning models as of 03/08/2025. It will be ignored.")
+            logging.warning(
+                "top_p is not supported for claude reasoning models as of 03/08/2025. It will be ignored."
+            )
 
         start_time = time.time()
-        thinking = {"type": "enabled", "budget_tokens": self.thinking_budget} if self.thinking_enabled else None
+        thinking = (
+            {"type": "enabled", "budget_tokens": self.thinking_budget}
+            if self.thinking_enabled
+            else None
+        )
         completion = self.client.messages.create(
             model=self.model_name,
             **request,
