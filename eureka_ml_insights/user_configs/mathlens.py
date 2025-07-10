@@ -100,6 +100,7 @@ class MATHLENS_PIPELINE(ExperimentConfig):
             data_loader_config=DataSetConfig(MMDataLoader, _data_config),
             output_dir=os.path.join(self.log_dir, "inference_result"),
             resume_from=resume_from,
+            max_concurrent=10,
         )
 
         # post process the response to extract the answer
