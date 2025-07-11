@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 
 import pandas as pd
@@ -47,8 +48,19 @@ def evaluate(model_output, answer):
     elif model_output.count("oxed{") > 1:
         model_output = "\\boxed{" + model_output.split("oxed{")[-1]
 
+    if model_output.count("oxed{") >= 1:
+        matches = re.findall(r"\\boxed\{(.*?)}", model_output)
+        assert matches, f"\\boxed parsing error: {model_output}"
+        model_output = matches[-1]
+
     gt_answer = answer if isinstance(answer, str) else str(answer)
 
-    hypo = parse(model_output)
-    gt = parse(gt_answer)
+    if gt_answer.lower() not in ["yes", "no", "true", "false"]:
+        hypo = parse(model_output)
+        gt = parse(gt_answer)
+    else:
+        hypo = model_output
+        gt = gt_answer
+    print(model_output.count("oxed{"))
+    print(hypo, gt, verify(hypo, gt))
     return verify(hypo, gt)

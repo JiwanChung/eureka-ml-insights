@@ -1,6 +1,7 @@
-""" This module contains config objects for the models used in the experiments. To use these configs, make sure to
-replace the placeholders with your own keys.json file, secret key names, and endpint URLs where applicable. 
-You can also add your custom models here by following the same pattern as the existing configs. """
+"""This module contains config objects for the models used in the experiments. To use these configs, make sure to
+replace the placeholders with your own keys.json file, secret key names, and endpint URLs where applicable.
+You can also add your custom models here by following the same pattern as the existing configs.
+"""
 
 from eureka_ml_insights.models import (
     AzureOpenAIOModel,
@@ -19,7 +20,7 @@ from eureka_ml_insights.models import (
     RestEndpointModel,
     TogetherModel,
     TestModel,
-    OfflineFileModel
+    OfflineFileModel,
 )
 from eureka_ml_insights.models.models import AzureOpenAIModel
 
@@ -59,7 +60,7 @@ TOGETHER_DEEPSEEK_R1_CONFIG = ModelConfig(
         "temperature": 1.0,
         # high max token limit for deep seek
         # otherwise the answers may be cut in the middle
-        "max_tokens": 65536
+        "max_tokens": 65536,
     },
 )
 
@@ -71,7 +72,7 @@ TOGETHER_DEEPSEEK_R1_Distill_Llama_70B_CONFIG = ModelConfig(
         "temperature": 0.6,
         # high max token limit for deep seek
         # otherwise the answers may be cut in the middle
-        "max_tokens": 65536
+        "max_tokens": 65536,
     },
 )
 
@@ -184,7 +185,7 @@ GEMINI_V2_FLASH_THINKING_EXP_0121_CONFIG = ModelConfig(
     {
         "model_name": "gemini-2.0-flash-thinking-exp-01-21",
         "secret_key_params": GEMINI_SECRET_KEY_PARAMS,
-	    "max_tokens": 32768
+        "max_tokens": 32768,
     },
 )
 
@@ -234,9 +235,9 @@ CLAUDE_3_7_SONNET_THINKING_CONFIG = ModelConfig(
         "model_name": "claude-3-7-sonnet-20250219",
         "thinking_enabled": True,
         "thinking_budget": 30720,
-        "max_tokens": 32768, # This number should always be higher than the thinking budget
-        "temperature": 1.0, # As of 03/08/2025, thinking only works with temperature 1.0
-        "timeout": 600, # We set a timeout of 10 minutes for thinking
+        "max_tokens": 32768,  # This number should always be higher than the thinking budget
+        "temperature": 1.0,  # As of 03/08/2025, thinking only works with temperature 1.0
+        "timeout": 600,  # We set a timeout of 10 minutes for thinking
     },
 )
 
@@ -356,5 +357,62 @@ DEEPSEEK_R1_CONFIG = ModelConfig(
         "max_tokens": 32768,
         # the timeout parameter is passed to urllib.request.urlopen(request, timeout=self.timeout) in ServerlessAzureRestEndpointModel
         "timeout": 600,
+    },
+)
+
+
+QWENVL7B_LOCAL_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "Qwen/Qwen2.5-VL-7B-Instruct",
+        "tensor_parallel_size": 1,
+    },
+)
+
+QWENVL72B_LOCAL_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "Qwen/Qwen2.5-VL-72B-Instruct",
+        "tensor_parallel_size": 8,
+    },
+)
+
+QVQ72B_LOCAL_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "Qwen/QVQ-72B-Preview",
+        "tensor_parallel_size": 8,
+    },
+)
+
+REVISUAL_COLDSTART_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "csfufu/Revisual-R1-Coldstart",
+        "tensor_parallel_size": 4,
+    },
+)
+
+REVISUAL_FINAL_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "csfufu/Revisual-R1-final",
+        "tensor_parallel_size": 4,
+    },
+)
+
+RETHINKER_7B_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "TIGER-Lab/VL-Rethinker-7B",
+        "tensor_parallel_size": 4,
+    },
+)
+
+RETHINKER_72B_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "TIGER-Lab/VL-Rethinker-72B",
+        "tensor_parallel_size": 8,
     },
 )

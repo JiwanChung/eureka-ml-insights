@@ -40,8 +40,9 @@ from eureka_ml_insights.configs import ExperimentConfig
 
 class MATHLENS_PIPELINE(ExperimentConfig):
     # mathlens_data_path: str = "../mathlens"
-    mathlens_data_path: str = "../mm_reasoning/data/data/ours/geometry/mathlens"
-    mathlens_data_is_local: bool = True
+    mathlens_data_path: str = os.environ.get(
+        "MATHLENS_PATH", "microsoft/mathlens"
+    )  # "../mm_reasoning/data/data/ours/geometry/mathlens"
 
     mathlens_setup_name: str = ""  # default
     mathlens_data_split: str = "test"
@@ -55,6 +56,8 @@ class MATHLENS_PIPELINE(ExperimentConfig):
         resume_from: Optional[str] = None,
         **kwargs: dict[str, Any],
     ) -> PipelineConfig:
+        mathlens_data_is_local: bool = "MATHLENS_PATH" in os.environ
+
         # Configure the data processing component.
         self.data_processing_comp = PromptProcessingConfig(
             component_type=PromptProcessing,
@@ -73,7 +76,7 @@ class MATHLENS_PIPELINE(ExperimentConfig):
                             ),
                         ]
                     ),
-                    "load_data_from_disk": self.mathlens_data_is_local,
+                    "load_data_from_disk": mathlens_data_is_local,
                 },
             ),
             prompt_template_path=os.path.join(
