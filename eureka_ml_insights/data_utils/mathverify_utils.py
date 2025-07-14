@@ -50,8 +50,10 @@ def evaluate(model_output, answer):
 
     if model_output.count("oxed{") >= 1:
         matches = re.findall(r"\\boxed\{(.*?)}", model_output)
-        assert matches, f"\\boxed parsing error: {model_output}"
-        model_output = matches[-1]
+        # assert matches, f"\\boxed parsing error: {model_output}"
+        # model_output = matches[-1]
+        if matches:
+            model_output = matches[-1]
 
     gt_answer = answer if isinstance(answer, str) else str(answer)
 
