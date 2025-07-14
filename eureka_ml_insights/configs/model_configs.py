@@ -390,6 +390,7 @@ REVISUAL_COLDSTART_CONFIG = ModelConfig(
     {
         "model_name": "csfufu/Revisual-R1-Coldstart",
         "tensor_parallel_size": 4,
+        "max_tokens": 16384,
     },
 )
 
@@ -398,6 +399,7 @@ REVISUAL_FINAL_CONFIG = ModelConfig(
     {
         "model_name": "csfufu/Revisual-R1-final",
         "tensor_parallel_size": 4,
+        "max_tokens": 16384,
     },
 )
 
