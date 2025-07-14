@@ -418,3 +418,19 @@ RETHINKER_72B_CONFIG = ModelConfig(
         "tensor_parallel_size": 8,
     },
 )
+
+GLM4_1V_9B_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "THUDM/GLM-4.1V-9B-Base",
+        "tensor_parallel_size": 4,
+    },
+)
+
+GLM4_1V_THINKING_9B_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "THUDM/GLM-4.1V-9B-Thinking",
+        "tensor_parallel_size": 4,
+    },
+)
