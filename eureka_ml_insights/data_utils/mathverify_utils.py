@@ -60,9 +60,12 @@ def evaluate(model_output, answer):
     if gt_answer.lower() not in ["yes", "no", "true", "false"]:
         hypo = parse(model_output)
         gt = parse(gt_answer)
+        return verify(hypo, gt)
     else:
-        hypo = model_output
-        gt = gt_answer
-    print(model_output.count("oxed{"))
-    print(hypo, gt, verify(hypo, gt))
-    return verify(hypo, gt)
+        hypo = model_output.strip()
+        gt = gt_answer.strip()
+
+        def tf_func(txt: str):
+            return txt.lower() in ["yes", "true"]
+
+        return tf_func(hypo) == tf_func(gt)
