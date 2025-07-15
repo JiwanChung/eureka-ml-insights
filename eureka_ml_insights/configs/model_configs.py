@@ -419,6 +419,7 @@ RETHINKER_72B_CONFIG = ModelConfig(
     },
 )
 
+# vllm>=0.9.2
 GLM4_1V_9B_CONFIG = ModelConfig(
     LocalVLLMModel,
     {
@@ -427,10 +428,35 @@ GLM4_1V_9B_CONFIG = ModelConfig(
     },
 )
 
+# vllm>=0.9.2
 GLM4_1V_THINKING_9B_CONFIG = ModelConfig(
     LocalVLLMModel,
     {
         "model_name": "THUDM/GLM-4.1V-9B-Thinking",
         "tensor_parallel_size": 4,
+    },
+)
+
+SKYWORK_R1V_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "Skywork/Skywork-R1V-38B",
+        "tensor_parallel_size": 8,
+    },
+)
+
+KIMIVL_A3B_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "moonshotai/Kimi-VL-A3B-Instruct",
+        "tensor_parallel_size": 8,
+    },
+)
+
+KIMIVL_A3B_THINKING_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "moonshotai/Kimi-VL-A3B-Thinking-2506",
+        "tensor_parallel_size": 8,
     },
 )
