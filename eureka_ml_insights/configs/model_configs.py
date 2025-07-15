@@ -476,7 +476,7 @@ INTERNVL2_5_38B_CONFIG = ModelConfig(
     },
 )
 
-INTERNVL2_5_8B_MPO_CONFIG = ModelConfig(
+INTERNVL2_5_38B_MPO_CONFIG = ModelConfig(
     LocalVLLMModel,
     {
         "model_name": "OpenGVLab/InternVL2_5-38B-MPO",
