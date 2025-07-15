@@ -554,3 +554,21 @@ INTERNVL2_5_4B_CONFIG = ModelConfig(
         "tensor_parallel_size": 2,
     },
 )
+
+# Qwen2.5-vl-7B finetune. SFTed on text-only
+OVR_7B_COLDSTART_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "Kangheng/OVR-7B-ColdStart",
+        "tensor_parallel_size": 4,
+    },
+)
+
+# requires gated access
+OVR_7B_RL_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "Kangheng/OVR-7B-RL",
+        "tensor_parallel_size": 4,
+    },
+)
