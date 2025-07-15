@@ -411,14 +411,29 @@ RETHINKER_7B_CONFIG = ModelConfig(
     },
 )
 
-RETHINKER_72B_CONFIG = ModelConfig(
+OPENVLTHINKER_CONFIG = ModelConfig(
     LocalVLLMModel,
     {
-        "model_name": "TIGER-Lab/VL-Rethinker-72B",
-        "tensor_parallel_size": 8,
+        "model_name": "ydeng9/OpenVLThinker-7B",
+        "tensor_parallel_size": 4,
     },
 )
 
+MM_EUREKA_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "FanqingM/MM-Eureka-Qwen-7B",
+        "tensor_parallel_size": 4,
+    },
+)
+
+RETHINKER_7B_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "TIGER-Lab/VL-Rethinker-7B",
+        "tensor_parallel_size": 4,
+    },
+)
 # vllm>=0.9.2
 GLM4_1V_9B_CONFIG = ModelConfig(
     LocalVLLMModel,
