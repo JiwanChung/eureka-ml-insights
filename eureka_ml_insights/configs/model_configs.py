@@ -452,6 +452,38 @@ GLM4_1V_THINKING_9B_CONFIG = ModelConfig(
     },
 )
 
+INTERNVL2_5_8B_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "OpenGVLab/InternVL2_5-8B",
+        "tensor_parallel_size": 4,
+    },
+)
+
+INTERNVL2_5_8B_MPO_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "OpenGVLab/InternVL2_5-8B-MPO",
+        "tensor_parallel_size": 4,
+    },
+)
+
+INTERNVL2_5_38B_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "OpenGVLab/InternVL2_5-38B",
+        "tensor_parallel_size": 4,
+    },
+)
+
+INTERNVL2_5_8B_MPO_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "OpenGVLab/InternVL2_5-38B-MPO",
+        "tensor_parallel_size": 4,
+    },
+)
+
 SKYWORK_R1V_CONFIG = ModelConfig(
     LocalVLLMModel,
     {
