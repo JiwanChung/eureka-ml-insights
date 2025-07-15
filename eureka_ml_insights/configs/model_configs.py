@@ -507,3 +507,50 @@ KIMIVL_A3B_THINKING_CONFIG = ModelConfig(
         "tensor_parallel_size": 8,
     },
 )
+
+
+# Qwen2.5-VL-7B finetune -> multimodal SFT: Fancy-MLLM/R1-Onevision
+R1_ONEVISION_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "Fancy-MLLM/R1-Onevision-7B",
+        "tensor_parallel_size": 4,
+    },
+)
+
+
+# multimodal SFT: Xkev/LLaVA-CoT-100k
+LLAMAV_3_2_11B_COT_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "Xkev/Llama-3.2V-11B-cot",
+        "tensor_parallel_size": 4,
+    },
+)
+
+# not gated
+LLAMAV_3_2_11B_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "unsloth/Llama-3.2-11B-Vision-Instruct",
+        "tensor_parallel_size": 4,
+    },
+)
+
+# OpenGVLab/InternVL2_5-4B finetune -> multimodal SFT: 5CD-AI/LLaVA-CoT-o1-Instruct
+# it's a bit confusing, but vintern does not include the ViT weight so it becomes 3B
+VINTERN_3B_R_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "5CD-AI/Vintern-3B-R-beta",
+        "tensor_parallel_size": 2,
+    },
+)
+
+INTERNVL2_5_4B_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "OpenGVLab/InternVL2_5-4B",
+        "tensor_parallel_size": 2,
+    },
+)
