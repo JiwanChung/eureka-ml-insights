@@ -382,6 +382,7 @@ QVQ72B_LOCAL_CONFIG = ModelConfig(
     {
         "model_name": "Qwen/QVQ-72B-Preview",
         "tensor_parallel_size": 8,
+        "max_tokens": 16384,
     },
 )
 
@@ -423,6 +424,14 @@ MM_EUREKA_CONFIG = ModelConfig(
     LocalVLLMModel,
     {
         "model_name": "FanqingM/MM-Eureka-Qwen-7B",
+        "tensor_parallel_size": 4,
+    },
+)
+
+THINKLITE_VL_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "russwang/ThinkLite-VL-7B",
         "tensor_parallel_size": 4,
     },
 )
