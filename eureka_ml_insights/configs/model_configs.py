@@ -369,6 +369,15 @@ QWENVL7B_LOCAL_CONFIG = ModelConfig(
     },
 )
 
+
+QWENVL32B_LOCAL_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "Qwen/Qwen2.5-VL-32B-Instruct",
+        "tensor_parallel_size": 8,
+    },
+)
+
 QWENVL72B_LOCAL_CONFIG = ModelConfig(
     LocalVLLMModel,
     {
