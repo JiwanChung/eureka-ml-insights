@@ -542,7 +542,9 @@ LLAMAV_3_2_11B_COT_CONFIG = ModelConfig(
     LocalVLLMModel,
     {
         "model_name": "Xkev/Llama-3.2V-11B-cot",
-        "tensor_parallel_size": 8,
+        "tensor_parallel_size": 4,
+        "max_num_seqs": 16,
+        "enforce_eager": True,
     },
 )
 
@@ -551,7 +553,9 @@ LLAMAV_3_2_11B_CONFIG = ModelConfig(
     LocalVLLMModel,
     {
         "model_name": "unsloth/Llama-3.2-11B-Vision-Instruct",
-        "tensor_parallel_size": 8,
+        "tensor_parallel_size": 4,
+        "max_num_seqs": 16,
+        "enforce_eager": True,
     },
 )
 
