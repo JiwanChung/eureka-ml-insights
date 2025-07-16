@@ -1,5 +1,6 @@
 """This module contains classes for interacting with various models, including API-based models and HuggingFace models."""
 
+from typing import Optional
 import json
 import pandas as pd
 import logging
@@ -1536,6 +1537,8 @@ class _LocalVLLMDeploymentHandler:
         seed: int = 0,
         gpu_memory_utilization: float = 0.9,
         cpu_offload_gb: float = 0,
+        max_num_seqs: Optional[int] = None,
+        enforce_eager: bool = False,
         ports: list = None,
     ):
         if not model_name:
@@ -1550,6 +1553,8 @@ class _LocalVLLMDeploymentHandler:
         self.seed = seed
         self.gpu_memory_utilization = gpu_memory_utilization
         self.cpu_offload_gb = cpu_offload_gb
+        self.max_num_seqs = max_num_seqs
+        self.enforce_eager = enforce_eager
 
         self.ports = ports
         self.session = requests.Session()
@@ -1678,6 +1683,11 @@ class _LocalVLLMDeploymentHandler:
             command.append(self.quantization)
         if self.trust_remote_code:
             command.append("--trust_remote_code")
+        if self.max_num_seqs is not None:
+            command.append("--max-num-seqs")
+            command.append(str(self.max_num_seqs))
+        if self.enforce_eager:
+            command.append("--enforce-eager")
         command = " ".join(command)
         logging.info(f"Running command: {command}")
         with open(log_file, "w") as log_writer:
@@ -1728,6 +1738,8 @@ class LocalVLLMModel(OpenAICommonRequestResponseMixIn, EndpointModel):
     seed: int = 0
     gpu_memory_utilization: float = 0.9
     cpu_offload_gb: float = 0
+    max_num_seqs: Optional[int] = None
+    enforce_eager: bool = False
 
     # Deployment handler
     ports: list = None
@@ -1766,6 +1778,8 @@ class LocalVLLMModel(OpenAICommonRequestResponseMixIn, EndpointModel):
                             seed=self.seed,
                             gpu_memory_utilization=self.gpu_memory_utilization,
                             cpu_offload_gb=self.cpu_offload_gb,
+                            max_num_seqs=self.max_num_seqs,
+                            enforce_eager=self.enforce_eager,
                             ports=self.ports,
                         )
                     )
