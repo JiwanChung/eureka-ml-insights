@@ -391,7 +391,10 @@ QVQ72B_LOCAL_CONFIG = ModelConfig(
     {
         "model_name": "Qwen/QVQ-72B-Preview",
         "tensor_parallel_size": 8,
-        "max_tokens": 32768,
+        "max_tokens": 16384,
+        "top_k": 1,
+        "top_p": 1.0,
+        "repetition_penalty": 1.05,
     },
 )
 
@@ -507,6 +510,7 @@ SKYWORK_R1V_CONFIG = ModelConfig(
     {
         "model_name": "Skywork/Skywork-R1V-38B",
         "tensor_parallel_size": 8,
+        "max_tokens": 16384,
     },
 )
 
@@ -515,6 +519,7 @@ SKYWORK_R1V2_CONFIG = ModelConfig(
     {
         "model_name": "Skywork/Skywork-R1V2-38B",
         "tensor_parallel_size": 8,
+        "max_tokens": 16394,
     },
 )
 
@@ -523,6 +528,7 @@ SKYWORK_R1V3_CONFIG = ModelConfig(
     {
         "model_name": "Skywork/Skywork-R1V3-38B",
         "tensor_parallel_size": 8,
+        "max_tokens": 16384,
     },
 )
 
@@ -611,5 +617,6 @@ OVR_7B_RL_CONFIG = ModelConfig(
     {
         "model_name": "Kangheng/OVR-7B-RL",
         "tensor_parallel_size": 4,
+        "max_tokens": 65536,
     },
 )

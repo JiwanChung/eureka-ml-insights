@@ -1431,10 +1431,13 @@ class VLLMModel(Model):
     seed: int = 0
     gpu_memory_utilization: float = 0.9
     cpu_offload_gb: float = 0
+    max_num_seqs: Optional[int] = None
+    enforce_eager: bool = False
 
     temperature: float = 0.001
     top_p: float = 0.95
     top_k: int = -1
+    repetition_penalty: float = 1.0
     max_tokens: int = 2000
 
     def __post_init__(self):
@@ -1462,6 +1465,7 @@ class VLLMModel(Model):
             temperature=self.temperature,
             top_p=self.top_p,
             top_k=self.top_k,
+            repetition_penalty=self.repetition_penalty,
             max_tokens=self.max_tokens,
         )
 
@@ -1752,6 +1756,7 @@ class LocalVLLMModel(OpenAICommonRequestResponseMixIn, EndpointModel):
     max_tokens: int = 2000
     frequency_penalty: float = 0
     presence_penalty: float = 0
+    repetition_penalty: float = 1.0
 
     def __post_init__(self):
         if not self.model_name:

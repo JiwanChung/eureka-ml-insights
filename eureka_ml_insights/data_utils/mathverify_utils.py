@@ -24,48 +24,119 @@ class MathVerifyOutputEvaluator(DFTransformBase):
         return df
 
 
-def evaluate(model_output, answer):
-    if not model_output or model_output == "":
+LABELS_TRUE = ["yes", "true", "correct"]
+LABELS_FALSE = ["no", "false", "incorrect"]
+
+
+def extract_last_boxed(text):
+    pattern = r"\\boxed\{"
+    results = []
+    for match in re.finditer(pattern, text):
+        start = match.end()
+        depth = 1
+        content = []
+        i = start
+
+        while i < len(text):
+            char = text[i]
+            if char == "{":
+                depth += 1
+            elif char == "}":
+                depth -= 1
+                if depth == 0:
+                    results.append("".join(content))
+                    break
+            content.append(char)
+            i += 1
+
+    return results[-1] if results else None
+
+
+def extract_boxed_answer(reasoning: str):
+    """
+    Extract the content inside the last \\boxed{...} in the reasoning.
+    """
+    if reasoning is None:
+        return None
+    mc_answer = reasoning.strip()
+    mc_labels = [*LABELS_TRUE, *LABELS_FALSE]
+    if mc_answer.lower() in mc_labels:
+        return mc_answer
+    elif reasoning.split("\n")[0].lower() in [
+        *mc_labels,
+        *[f"{v}." for v in mc_labels],
+    ]:
+        return reasoning.split("\n")[0].removesuffix(".")
+    elif reasoning.split("\n")[0].lower() in [
+        *[f"\\boxed{{{v}}}" for v in mc_labels],
+        *[f"\\boxed{{{v}}}." for v in mc_labels],
+    ]:
+        out = extract_last_boxed(reasoning.split("\n")[0])
+        if out is None:
+            return None
+        return out.removesuffix(".")
+    # matches = re.findall(r"\\boxed\{(.*?)}", reasoning)
+    # output = matches[-1] if matches else "Unknown"
+    output = extract_last_boxed(reasoning)
+    if output is None:
+        # openvlthinker
+        matches = re.findall(r"<answer>(.*?)</answer>", reasoning)
+        output = matches[-1] if matches else None
+    if output is None:
+        # internvl-4b
+        pattern = r"The answer is:\s*(.+?)"
+        matches = re.findall(pattern, reasoning, flags=re.IGNORECASE | re.DOTALL)
+        output = matches[-1].removeprefix(".") if matches else None
+    if output is None:
+        pattern = r"The correct answer is:\s*(.+?)"
+        matches = re.findall(pattern, reasoning, flags=re.IGNORECASE | re.DOTALL)
+        output = matches[-1].removeprefix(".") if matches else None
+    return output
+
+
+def verify_single(hypo, gt):
+    if gt.lower() in [*LABELS_TRUE, *LABELS_FALSE]:
+        is_valid = hypo.lower() in [*LABELS_TRUE, *LABELS_FALSE]
+
+        hypo_true = hypo.lower() in LABELS_TRUE
+        gt_true = gt.lower() in LABELS_TRUE
+        return hypo_true == gt_true, is_valid
+    else:
+        hypo = parse(hypo)
+        if len(hypo) != 2:
+            return False, False
+        hypo = hypo[1]
+        flag = hypo and len(hypo) < 50
+        gt = parse(gt)
+        if flag:
+            return verify(hypo, gt), True
+        else:
+            return False, False
+
+
+def _do_verify(hypo, gt) -> tuple[bool, bool]:
+    hypo = extract_boxed_answer(hypo)
+    if hypo is None:
+        return False, False
+
+    matches = re.findall(r"\\text\{(.*?)}", hypo)
+    if matches:
+        hypo = matches[-1]
+
+    if isinstance(gt, str):
+        gt = [gt]
+
+    correct = False
+    valid = False
+    for _gt in gt:
+        _correct, _valid = verify_single(hypo, _gt)
+        correct = correct or _correct
+        valid = valid or _valid
+    return correct, valid
+
+
+def evaluate(hypo, gt):
+    if not hypo or hypo == "":
         return False
 
-    # extract box
-    if "oxed{" not in model_output:
-        for flag in [
-            "the final answer is",
-            "the answer is",
-            "the correct answer is",
-            "the answer should be",
-        ]:
-            raw_model_output = model_output
-            model_output = model_output.split(flag)[-1].strip()
-            if flag in raw_model_output:
-                model_output = model_output.split("\n")[0].split(". ")[0]
-            flag = flag.replace("the", "The")
-            raw_model_output = model_output
-            model_output = model_output.split(flag)[-1].strip()
-            if flag in raw_model_output:
-                model_output = model_output.split("\n")[0].split(". ")[0]
-    elif model_output.count("oxed{") > 1:
-        model_output = "\\boxed{" + model_output.split("oxed{")[-1]
-
-    if model_output.count("oxed{") >= 1:
-        matches = re.findall(r"\\boxed\{(.*?)}", model_output)
-        # assert matches, f"\\boxed parsing error: {model_output}"
-        # model_output = matches[-1]
-        if matches:
-            model_output = matches[-1]
-
-    gt_answer = answer if isinstance(answer, str) else str(answer)
-
-    if gt_answer.lower() not in ["yes", "no", "true", "false"]:
-        hypo = parse(model_output)
-        gt = parse(gt_answer)
-        return verify(hypo, gt)
-    else:
-        hypo = model_output.strip()
-        gt = gt_answer.strip()
-
-        def tf_func(txt: str):
-            return txt.lower() in ["yes", "true"]
-
-        return tf_func(hypo) == tf_func(gt)
+    return _do_verify(hypo, gt)[0]

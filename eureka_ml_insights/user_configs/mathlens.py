@@ -200,6 +200,20 @@ class MATHLENS_TEXT_PIPELINE(MATHLENS_PIPELINE):
     mathlens_use_images: bool = False
 
 
+class MATHLENS_QUERAW_PIPELINE(MATHLENS_PIPELINE):
+    mathlens_setup_name: str = "TEXT"
+    mathlens_data_split: str = "test"
+    mathlens_question_key: str = "question_raw"
+    mathlens_use_images: bool = False
+
+
+class MATHLENS_TEXTONLY_PIPELINE(MATHLENS_PIPELINE):
+    mathlens_setup_name: str = "TEXT"
+    mathlens_data_split: str = "test"
+    mathlens_question_key: str = "question_vis"
+    mathlens_use_images: bool = False
+
+
 class MATHLENS_PERCEPTION_PIPELINE(MATHLENS_PIPELINE):
     mathlens_setup_name: str = "PERCEPTION"
     mathlens_data_split: str = "perception"
@@ -209,7 +223,8 @@ class MATHLENS_PERCEPTION_PIPELINE(MATHLENS_PIPELINE):
 
 class MATHLENS_PERCEPTIONBASE_PIPELINE(MATHLENS_PERCEPTION_PIPELINE):
     mathlens_setup_name: str = "PERCEPTIONBASE"
-    mathlens_data_split: str = "perception_base"
+    mathlens_data_split: str = "perception_base_choice"
+    mathlens_question_key: str = "question"
 
 
 class MATHLENS_DEBUG_PIPELINE(MATHLENS_PIPELINE):
