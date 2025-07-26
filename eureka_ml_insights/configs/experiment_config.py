@@ -17,10 +17,11 @@ def create_logdir(exp_dir: str, exp_subdir: Optional[str] = None):
     """
     # generate a unique log dir based on time and date
     date = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S.%f")
+    log_root = os.environ.get("EUREKA_EXPLOGDIR", "logs")
     if exp_subdir is None:
-        log_dir = os.path.join("logs", f"{exp_dir}", f"{date}")
+        log_dir = os.path.join(log_root, f"{exp_dir}", f"{date}")
     else:
-        log_dir = os.path.join("logs", f"{exp_dir}", f"{exp_subdir}", f"{date}")
+        log_dir = os.path.join(log_root, f"{exp_dir}", f"{exp_subdir}", f"{date}")
     os.makedirs(log_dir)
     return log_dir
 
@@ -30,6 +31,7 @@ class ExperimentConfig(ABC):
     Abstract class for the experiment piplien configuration class.
     Child classes should implement the configure_pipeline method.
     """
+
     def __init__(self, exp_logdir: Optional[str] = None, **kwargs):
 
         dir_name = self.__class__.__name__
@@ -41,4 +43,6 @@ class ExperimentConfig(ABC):
 
     @abstractmethod
     def configure_pipeline(self, **kwargs) -> PipelineConfig:
-        raise NotImplementedError("configure_pipeline method must be implemented in the subclass")
+        raise NotImplementedError(
+            "configure_pipeline method must be implemented in the subclass"
+        )
