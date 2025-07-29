@@ -204,7 +204,7 @@ class MATHLENS_QUERAW_PIPELINE(MATHLENS_PIPELINE):
     mathlens_setup_name: str = "TEXT"
     mathlens_data_split: str = "test"
     mathlens_question_key: str = "question_raw"
-    mathlens_use_images: bool = False
+    # mathlens_use_images: bool = False
 
 
 class MATHLENS_TEXTONLY_PIPELINE(MATHLENS_PIPELINE):
