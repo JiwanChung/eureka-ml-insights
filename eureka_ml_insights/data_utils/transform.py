@@ -78,12 +78,19 @@ class RunPythonTransform(DFTransformBase):
         statements = [s.strip() for s in self.python_code.split(";")]
         # Checks that each statement starts with an allowed prefix.
         for statement in statements:
-            if not any(statement.startswith(prefix) for prefix in self.allowed_statement_prefixes):
-                raise ValueError("For security reasons, only imports and operations on the data frame are allowed.")
+            if not any(
+                statement.startswith(prefix)
+                for prefix in self.allowed_statement_prefixes
+            ):
+                raise ValueError(
+                    "For security reasons, only imports and operations on the data frame are allowed."
+                )
         if self.global_imports:
             for module_name in self.global_imports:
                 if module_name not in self.allowed_imports:
-                    raise ValueError(f"Importing {module_name} in RunPythonTransform is not allowed.")
+                    raise ValueError(
+                        f"Importing {module_name} in RunPythonTransform is not allowed."
+                    )
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         # Adds 'df' to the global scope of exec so that it can be overwritten during exec if needed.
@@ -112,6 +119,14 @@ class SamplerTransform(DFTransformBase):
             )
         else:
             return df.sample(n=self.sample_count, random_state=self.random_seed)
+
+
+@dataclass
+class HeadSamplerTransform(DFTransformBase):
+    sample_count: int
+
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df.head(self.sample_count)
 
 
 @dataclass
@@ -187,7 +202,9 @@ class MultiColumnTransform(DFTransformBase):
         extra_columns = set(self.columns) - set(df.columns)
         if extra_columns:
             msg = ", ".join(sorted(extra_columns))
-            raise ValueError(f"The following columns are not present in the data frame: {msg}")
+            raise ValueError(
+                f"The following columns are not present in the data frame: {msg}"
+            )
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """Apply the transform to the columns."""
@@ -252,7 +269,9 @@ class ColumnMatchMapTransform(DFTransformBase):
         extra_columns = set(self.columns + [self.key_col]) - set(df.columns)
         if extra_columns:
             msg = ", ".join(sorted(extra_columns))
-            raise ValueError(f"The following columns are not present in the data frame: {msg}")
+            raise ValueError(
+                f"The following columns are not present in the data frame: {msg}"
+            )
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """For each row in df, shuffle values across these columns."""
@@ -289,7 +308,9 @@ class ReplaceStringsTransform(MultiColumnTransform):
         self.validate(df)
         for column in self.columns:
             for source, target in self.mapping.items():
-                df[column] = df[column].str.replace(source, target, case=self.case, regex=False)
+                df[column] = df[column].str.replace(
+                    source, target, case=self.case, regex=False
+                )
 
         return df
 
@@ -408,9 +429,13 @@ class MajorityVoteTransform:
     """
 
     model_output_col: str = "model_output"  # Default column name for model outputs
-    model_label_column: str = None  # Column name for model labels or scores corresponding to model outputs
+    model_label_column: str = (
+        None  # Column name for model labels or scores corresponding to model outputs
+    )
     id_col: str = "data_point_id"  # Default column name for IDs
-    majority_vote_col: str = "majority_vote"  # Default column name for storing majority vote
+    majority_vote_col: str = (
+        "majority_vote"  # Default column name for storing majority vote
+    )
     majority_label_col: str = (
         "majority_label"  # Default column name for storing label corresponding to majority vote output
     )
@@ -439,7 +464,12 @@ class MajorityVoteTransform:
 
     @staticmethod
     def majority_vote(
-        group, model_output_col, model_label_col, majority_vote_col, majority_label_col, random_state: int = 0
+        group,
+        model_output_col,
+        model_label_col,
+        majority_vote_col,
+        majority_label_col,
+        random_state: int = 0,
     ):
         """
         Calculate majority vote for each group.
@@ -454,11 +484,15 @@ class MajorityVoteTransform:
         """
         x = group[model_output_col]
         majority_value = (
-            x.dropna().mode().sample(n=1, random_state=random_state).iloc[0] if not x.dropna().mode().empty else pd.NA
+            x.dropna().mode().sample(n=1, random_state=random_state).iloc[0]
+            if not x.dropna().mode().empty
+            else pd.NA
         )
         group[majority_vote_col] = majority_value
         if model_label_col:
-            group[majority_label_col] = group.loc[group[model_output_col] == majority_value, model_label_col].iloc[0]
+            group[majority_label_col] = group.loc[
+                group[model_output_col] == majority_value, model_label_col
+            ].iloc[0]
         return group
 
 
@@ -491,14 +525,18 @@ class ExtractUsageTransform:
         usage_completion_read_col = None
         if self.model_config.class_name is GeminiModel:
             usage_completion_read_col = "candidates_token_count"
-        elif self.model_config.class_name is ClaudeModel or self.model_config.class_name is ClaudeReasoningModel:
+        elif (
+            self.model_config.class_name is ClaudeModel
+            or self.model_config.class_name is ClaudeReasoningModel
+        ):
             usage_completion_read_col = "output_tokens"
         elif (
             self.model_config.class_name is AzureOpenAIOModel
             or self.model_config.class_name is AzureOpenAIModel
             or self.model_config.class_name is LlamaServerlessAzureRestEndpointModel
             or self.model_config.class_name is MistralServerlessAzureRestEndpointModel
-            or self.model_config.class_name is DeepseekR1ServerlessAzureRestEndpointModel
+            or self.model_config.class_name
+            is DeepseekR1ServerlessAzureRestEndpointModel
             or self.model_config.class_name is DirectOpenAIModel
             or self.model_config.class_name is DirectOpenAIOModel
             or self.model_config.class_name is TogetherModel
@@ -521,16 +559,22 @@ class ExtractUsageTransform:
             df[self.usage_completion_output_col] = np.nan
         return df
 
-    def validate(self, df: pd.DataFrame, usage_completion_read_col: str) -> pd.DataFrame:
+    def validate(
+        self, df: pd.DataFrame, usage_completion_read_col: str
+    ) -> pd.DataFrame:
         """Check that usage_columns or n_tokens_columns are present actually in the data frame.
         Args:
             df (pd.DataFrame): Input dataframe containing model_output_col and id_col.
             usage_completion_read_col (str): The column name for token extraction.
         """
         if usage_completion_read_col and self.usage_column not in df.columns:
-            raise ValueError(f"The {self.usage_column} column is not present in the data frame.")
+            raise ValueError(
+                f"The {self.usage_column} column is not present in the data frame."
+            )
         elif self.n_tokens_column not in df.columns:
-            raise ValueError(f"The {self.n_tokens_column} column is not present in the data frame.")
+            raise ValueError(
+                f"The {self.n_tokens_column} column is not present in the data frame."
+            )
 
     def _extract_usage(self, row, usage_completion_read_col):
         """
@@ -541,6 +585,9 @@ class ExtractUsageTransform:
         Returns:
             int: The token usage for the row.
         """
-        if not pd.isna(row[self.usage_column]) and usage_completion_read_col in row[self.usage_column]:
+        if (
+            not pd.isna(row[self.usage_column])
+            and usage_completion_read_col in row[self.usage_column]
+        ):
             return row[self.usage_column][usage_completion_read_col]
         return np.nan

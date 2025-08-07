@@ -1,4 +1,5 @@
 import re
+import string
 from dataclasses import dataclass
 
 import pandas as pd
@@ -26,6 +27,7 @@ class MathVerifyOutputEvaluator(DFTransformBase):
 
 LABELS_TRUE = ["yes", "true", "correct"]
 LABELS_FALSE = ["no", "false", "incorrect"]
+LABELS_MC = list(string.ascii_lowercase[:10])  # MMMU-pro has up to 10 choices
 
 
 def extract_last_boxed(text):
@@ -94,20 +96,31 @@ def extract_boxed_answer(reasoning: str):
     return output
 
 
+def _parse(x):
+    parsed = parse(x)
+    if len(parsed) != 2:
+        hypo = x
+    else:
+        hypo = parsed[1]
+    return hypo
+
+
 def verify_single(hypo, gt):
+    hypo = hypo.strip()
     if gt.lower() in [*LABELS_TRUE, *LABELS_FALSE]:
         is_valid = hypo.lower() in [*LABELS_TRUE, *LABELS_FALSE]
 
         hypo_true = hypo.lower() in LABELS_TRUE
         gt_true = gt.lower() in LABELS_TRUE
         return hypo_true == gt_true, is_valid
+    elif gt.lower() in [*LABELS_MC]:
+        is_valid = hypo.lower() in [*LABELS_MC]
+
+        return hypo.lower() == gt.lower(), is_valid
     else:
-        hypo = parse(hypo)
-        if len(hypo) != 2:
-            return False, False
-        hypo = hypo[1]
+        hypo = _parse(hypo)
         flag = hypo and len(hypo) < 50
-        gt = parse(gt)
+        gt = _parse(gt)
         if flag:
             return verify(hypo, gt), True
         else:

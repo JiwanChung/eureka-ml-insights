@@ -20,6 +20,7 @@ from eureka_ml_insights.data_utils import (
     HFDataReader,
     MMDataLoader,
     SequenceTransform,
+    HeadSamplerTransform,
 )
 
 from eureka_ml_insights.configs import (
@@ -46,9 +47,54 @@ class MATHLENS_PIPELINE(ExperimentConfig):
 
     mathlens_setup_name: str = ""  # default
     mathlens_data_split: str = "test"
-    mathlens_question_key: str = "question_vis"
+    mathlens_question_key: str = "query_vis_cot"
     mathlens_use_images: bool = True
     mathlens_per_key_aggregation: list[tuple[str, str]] = []
+
+    debug_samples: Optional[int] = None
+
+    def get_aggregators(self):
+        return [
+            AggregatorConfig(
+                AverageAggregator,
+                {
+                    "column_names": ["score"],
+                    "filename_base": f"MathLens{self.mathlens_setup_name}_Score",
+                    "per_key_aggregation": [*self.mathlens_per_key_aggregation],
+                },
+            ),
+            AggregatorConfig(
+                AverageAggregator,
+                {
+                    "column_names": ["score"],
+                    "filename_base": f"MathLens{self.mathlens_setup_name}_Score_AllCorrect",
+                    "per_key_aggregation": [
+                        *self.mathlens_per_key_aggregation,
+                        ("problem_id", "min"),
+                    ],
+                },
+            ),
+            AggregatorConfig(
+                AverageAggregator,
+                {
+                    "column_names": ["score"],
+                    "filename_base": f"MathLens{self.mathlens_setup_name}_Score_AnyCorrect",
+                    "per_key_aggregation": [
+                        *self.mathlens_per_key_aggregation,
+                        ("problem_id", "max"),
+                    ],
+                },
+            ),
+            AggregatorConfig(
+                AverageAggregator,
+                {
+                    "column_names": ["score"],
+                    "filename_base": f"MathLens{self.mathlens_setup_name}_Score_By_Modification",
+                    "group_by": ["modification_type"],
+                    "per_key_aggregation": [*self.mathlens_per_key_aggregation],
+                },
+            ),
+        ]
 
     def configure_pipeline(
         self,
@@ -58,6 +104,16 @@ class MATHLENS_PIPELINE(ExperimentConfig):
     ) -> PipelineConfig:
         mathlens_data_is_local: bool = "MATHLENS_PATH" in os.environ
 
+        transforms = [
+            ColumnRename(
+                name_mapping={
+                    self.mathlens_question_key: "prompt",
+                    "answer": "ground_truth",
+                }
+            ),
+        ]
+        if self.debug_samples is not None:
+            transforms.append(HeadSamplerTransform(sample_count=self.debug_samples))
         # Configure the data processing component.
         self.data_processing_comp = PromptProcessingConfig(
             component_type=PromptProcessing,
@@ -66,16 +122,7 @@ class MATHLENS_PIPELINE(ExperimentConfig):
                 {
                     "path": self.mathlens_data_path,
                     "split": self.mathlens_data_split,
-                    "transform": SequenceTransform(
-                        [
-                            ColumnRename(
-                                name_mapping={
-                                    self.mathlens_question_key: "prompt",
-                                    "answer": "ground_truth",
-                                }
-                            ),
-                        ]
-                    ),
+                    "transform": SequenceTransform(transforms),
                     "load_data_from_disk": mathlens_data_is_local,
                 },
             ),
@@ -138,47 +185,7 @@ class MATHLENS_PIPELINE(ExperimentConfig):
                     "format": ".jsonl",
                 },
             ),
-            aggregator_configs=[
-                AggregatorConfig(
-                    AverageAggregator,
-                    {
-                        "column_names": ["score"],
-                        "filename_base": f"MathLens{self.mathlens_setup_name}_Score",
-                        "per_key_aggregation": [*self.mathlens_per_key_aggregation],
-                    },
-                ),
-                AggregatorConfig(
-                    AverageAggregator,
-                    {
-                        "column_names": ["score"],
-                        "filename_base": f"MathLens{self.mathlens_setup_name}_Score_AllCorrect",
-                        "per_key_aggregation": [
-                            *self.mathlens_per_key_aggregation,
-                            ("problem_id", "min"),
-                        ],
-                    },
-                ),
-                AggregatorConfig(
-                    AverageAggregator,
-                    {
-                        "column_names": ["score"],
-                        "filename_base": f"MathLens{self.mathlens_setup_name}_Score_AnyCorrect",
-                        "per_key_aggregation": [
-                            *self.mathlens_per_key_aggregation,
-                            ("problem_id", "max"),
-                        ],
-                    },
-                ),
-                AggregatorConfig(
-                    AverageAggregator,
-                    {
-                        "column_names": ["score"],
-                        "filename_base": f"MathLens{self.mathlens_setup_name}_Score_By_Modification",
-                        "group_by": ["modification_type"],
-                        "per_key_aggregation": [*self.mathlens_per_key_aggregation],
-                    },
-                ),
-            ],
+            aggregator_configs=self.get_aggregators(),
             output_dir=os.path.join(self.log_dir, "eval_report"),
         )
 
@@ -193,40 +200,78 @@ class MATHLENS_PIPELINE(ExperimentConfig):
         )
 
 
+class MATHLENS_QUERAW_PIPELINE(MATHLENS_PIPELINE):
+    mathlens_setup_name: str = "QUERAW"
+    mathlens_data_split: str = "test"
+    mathlens_question_key: str = "query_raw_cot"
+
+
 class MATHLENS_TEXT_PIPELINE(MATHLENS_PIPELINE):
     mathlens_setup_name: str = "TEXT"
     mathlens_data_split: str = "test"
-    mathlens_question_key: str = "question_text"
+    mathlens_question_key: str = "query_text_cot"
     mathlens_use_images: bool = False
 
 
-class MATHLENS_QUERAW_PIPELINE(MATHLENS_PIPELINE):
-    mathlens_setup_name: str = "TEXT"
-    mathlens_data_split: str = "test"
-    mathlens_question_key: str = "question_raw"
-    # mathlens_use_images: bool = False
-
-
 class MATHLENS_TEXTONLY_PIPELINE(MATHLENS_PIPELINE):
-    mathlens_setup_name: str = "TEXT"
+    mathlens_setup_name: str = "TEXTONLY"
     mathlens_data_split: str = "test"
-    mathlens_question_key: str = "question_vis"
+    mathlens_question_key: str = "query_vis_cot"
     mathlens_use_images: bool = False
 
 
 class MATHLENS_PERCEPTION_PIPELINE(MATHLENS_PIPELINE):
     mathlens_setup_name: str = "PERCEPTION"
     mathlens_data_split: str = "perception"
-    mathlens_question_key: str = "question"
+    mathlens_question_key: str = "query_cot"
     mathlens_per_key_aggregation: list[tuple[str, str]] = [("image_key", "min")]
 
 
 class MATHLENS_PERCEPTIONBASE_PIPELINE(MATHLENS_PERCEPTION_PIPELINE):
     mathlens_setup_name: str = "PERCEPTIONBASE"
     mathlens_data_split: str = "perception_base_choice"
-    mathlens_question_key: str = "question"
+
+    def get_aggregators(self):
+        return [
+            AggregatorConfig(
+                AverageAggregator,
+                {
+                    "column_names": ["score"],
+                    "filename_base": f"MathLens{self.mathlens_setup_name}_Score_AllProblem",
+                    "per_key_aggregation": [("image_key", "min")],
+                },
+            ),
+            AggregatorConfig(
+                AverageAggregator,
+                {
+                    "column_names": ["score"],
+                    "filename_base": f"MathLens{self.mathlens_setup_name}_Score_AnyProblem",
+                    "per_key_aggregation": [("image_key", "max")],
+                },
+            ),
+            AggregatorConfig(
+                AverageAggregator,
+                {
+                    "column_names": ["score"],
+                    "filename_base": f"MathLens{self.mathlens_setup_name}_Score_AvgProblem",
+                },
+            ),
+            AggregatorConfig(
+                AverageAggregator,
+                {
+                    "column_names": ["score"],
+                    "filename_base": f"MathLens{self.mathlens_setup_name}_Score_AvgProblem",
+                    "group_by": "question_type",
+                },
+            ),
+        ]
+
+
+class MATHLENS_PERCEPTIONBASEDEBUG_PIPELINE(MATHLENS_PERCEPTIONBASE_PIPELINE):
+    mathlens_setup_name: str = "PERCEPTIONBASEDEBUG"
+    debug_samples: int = 32
 
 
 class MATHLENS_DEBUG_PIPELINE(MATHLENS_PIPELINE):
     mathlens_setup_name: str = "DEBUG"
-    mathlens_data_split: str = "debug"
+    debug_samples: int = 8

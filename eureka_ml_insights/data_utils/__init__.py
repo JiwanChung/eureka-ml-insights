@@ -35,11 +35,12 @@ from .transform import (
     ReplaceStringsTransform,
     RunPythonTransform,
     SamplerTransform,
+    HeadSamplerTransform,
     SequenceTransform,
     ShuffleColumnsTransform,
     MajorityVoteTransform,
     TokenCounterTransform,
-    ExtractUsageTransform
+    ExtractUsageTransform,
 )
 
 __all__ = [
@@ -67,6 +68,7 @@ __all__ = [
     AddColumn,
     AddColumnAndData,
     SamplerTransform,
+    HeadSamplerTransform,
     MultiplyTransform,
     RegexTransform,
     ASTEvalTransform,
