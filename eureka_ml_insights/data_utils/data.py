@@ -14,6 +14,7 @@ from azure.storage.blob import BlobClient, ContainerClient
 from datasets import load_dataset, load_from_disk
 from PIL import Image
 from tqdm import tqdm
+from filelock import FileLock
 
 from eureka_ml_insights.secret_management import get_secret
 
@@ -578,15 +579,19 @@ class HFDataReader(DataReader):
             file_path = os.path.join(cache_path, Path(image_base64["path"]).name)
 
             # only do this if the image doesn't already exist
-            if not os.path.exists(file_path):
-                # base64 string to binary image data
-                buffered = BytesIO(image_base64["bytes"])
-                query_image = Image.open(buffered).convert("RGB")
+            lock_path = file_path + ".lock"
+            # acquire lock, lest you collide with other Eureka jobs
+            # collisions may lead to empty image files
+            with FileLock(lock_path):
+                if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+                    # base64 string to binary image data
+                    buffered = BytesIO(image_base64["bytes"])
+                    query_image = Image.open(buffered).convert("RGB")
 
-                # save image and make the dir path if needed (need for paths with nested new dirs)
-                dir_path = os.path.dirname(file_path)
-                os.makedirs(dir_path, exist_ok=True)
-                query_image.save(file_path)
+                    # save image and make the dir path if needed (need for paths with nested new dirs)
+                    dir_path = os.path.dirname(file_path)
+                    os.makedirs(dir_path, exist_ok=True)
+                    query_image.save(file_path)
 
         return file_path
 
