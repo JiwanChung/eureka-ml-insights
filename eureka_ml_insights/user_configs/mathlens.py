@@ -260,7 +260,7 @@ class MATHLENS_PERCEPTIONBASE_PIPELINE(MATHLENS_PERCEPTION_PIPELINE):
                 AverageAggregator,
                 {
                     "column_names": ["score"],
-                    "filename_base": f"MathLens{self.mathlens_setup_name}_Score_AvgProblem",
+                    "filename_base": f"MathLens{self.mathlens_setup_name}_Score_AvgProblemByType",
                     "group_by": "question_type",
                 },
             ),
