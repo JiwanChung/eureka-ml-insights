@@ -550,7 +550,7 @@ KIMIVL_A3B_THINKING_CONFIG = ModelConfig(
 
 
 # Qwen2.5-VL-7B finetune -> multimodal SFT: Fancy-MLLM/R1-Onevision
-R1_ONEVISION_CONFIG = ModelConfig(
+R1_ONEVISION_SFT_CONFIG = ModelConfig(
     LocalVLLMModel,
     {
         "model_name": "Fancy-MLLM/R1-Onevision-7B",
@@ -558,6 +558,29 @@ R1_ONEVISION_CONFIG = ModelConfig(
     },
 )
 
+R1_ONEVISION_RL_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "Fancy-MLLM/R1-Onevision-7B-RL",
+        "tensor_parallel_size": 4,
+    },
+)
+
+VISION_R1_SFT_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "Osilly/Vision-R1-CI-7B",
+        "tensor_parallel_size": 4,
+    },
+)
+
+VISION_R1_RL_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "Osilly/Vision-R1-7B",
+        "tensor_parallel_size": 4,
+    },
+)
 
 # multimodal SFT: Xkev/LLaVA-CoT-100k
 LLAMAV_3_2_11B_COT_CONFIG = ModelConfig(
