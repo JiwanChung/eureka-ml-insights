@@ -571,6 +571,9 @@ VISION_R1_SFT_CONFIG = ModelConfig(
     {
         "model_name": "Osilly/Vision-R1-CI-7B",
         "tensor_parallel_size": 4,
+        "max_tokens": 16000,
+        "temperature": 0.6,
+        "top_p": 0.95,
     },
 )
 
@@ -579,6 +582,9 @@ VISION_R1_RL_CONFIG = ModelConfig(
     {
         "model_name": "Osilly/Vision-R1-7B",
         "tensor_parallel_size": 4,
+        "max_tokens": 16000,
+        "temperature": 0.6,
+        "top_p": 0.95,
     },
 )
 
