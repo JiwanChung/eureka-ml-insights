@@ -130,6 +130,15 @@ class HeadSamplerTransform(DFTransformBase):
 
 
 @dataclass
+class FilterTransform(DFTransformBase):
+    key: str
+    val: str
+
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df[df[self.key] == self.val]
+
+
+@dataclass
 class MultiplyTransform(DFTransformBase):
     """
     Repeats each row n times, and adds a column to the data frame indicating the repeat number.

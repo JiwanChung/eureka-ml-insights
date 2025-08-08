@@ -21,6 +21,7 @@ from eureka_ml_insights.data_utils import (
     MMDataLoader,
     SequenceTransform,
     HeadSamplerTransform,
+    FilterTransform,
 )
 
 from eureka_ml_insights.configs import (
@@ -52,6 +53,7 @@ class MATHLENS_PIPELINE(ExperimentConfig):
     mathlens_per_key_aggregation: list[tuple[str, str]] = []
 
     debug_samples: Optional[int] = None
+    modification_type: Optional[str] = None
 
     def get_aggregators(self):
         return [
@@ -114,6 +116,10 @@ class MATHLENS_PIPELINE(ExperimentConfig):
         ]
         if self.debug_samples is not None:
             transforms.append(HeadSamplerTransform(sample_count=self.debug_samples))
+        if self.modification_type is not None:
+            transforms.append(
+                FilterTransform(key="modification_type", val=self.modification_type)
+            )
         # Configure the data processing component.
         self.data_processing_comp = PromptProcessingConfig(
             component_type=PromptProcessing,
@@ -213,11 +219,19 @@ class MATHLENS_TEXT_PIPELINE(MATHLENS_PIPELINE):
     mathlens_use_images: bool = False
 
 
+class MATHLENS_TEXTBASE_PIPELINE(MATHLENS_TEXT_PIPELINE):
+    modification_type: str = "base"
+
+
 class MATHLENS_TEXTONLY_PIPELINE(MATHLENS_PIPELINE):
     mathlens_setup_name: str = "TEXTONLY"
     mathlens_data_split: str = "test"
     mathlens_question_key: str = "query_vis_cot"
     mathlens_use_images: bool = False
+
+
+class MATHLENS_TEXTONLYBASE_PIPELINE(MATHLENS_TEXTONLY_PIPELINE):
+    modification_type: str = "base"
 
 
 class MATHLENS_PERCEPTION_PIPELINE(MATHLENS_PIPELINE):
