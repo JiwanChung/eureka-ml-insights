@@ -93,6 +93,11 @@ def extract_boxed_answer(reasoning: str):
         pattern = r"The correct answer is:\s*(.+?)"
         matches = re.findall(pattern, reasoning, flags=re.IGNORECASE | re.DOTALL)
         output = matches[-1].removeprefix(".") if matches else None
+    if output is not None:
+        # vision-r1: <answer> Final Answer:{}</answer>
+        output = (
+            output.strip().removeprefix("Final Answer:").removeprefix("Answer:").strip()
+        )
     return output
 
 
