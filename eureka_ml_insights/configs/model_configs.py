@@ -636,8 +636,8 @@ OVR_7B_COLDSTART_CONFIG = ModelConfig(
     {
         "model_name": "Kangheng/OVR-7B-ColdStart",
         "tensor_parallel_size": 4,
-        "max_tokens": 32768,
-        "repetition_penalty": 1.05,
+        "max_tokens": 32000,
+        # "repetition_penalty": 1.05,
     },
 )
 
@@ -647,7 +647,15 @@ OVR_7B_RL_CONFIG = ModelConfig(
     {
         "model_name": "Kangheng/OVR-7B-RL",
         "tensor_parallel_size": 4,
-        "max_tokens": 65536,
-        "repetition_penalty": 1.05,
+        "max_tokens": 48000,
+        # "repetition_penalty": 1.05,
+    },
+)
+
+R1_SHAREVL_CONFIG = ModelConfig(
+    LocalVLLMModel,
+    {
+        "model_name": "HuanjinYao/R1-ShareVL-7B",
+        "tensor_parallel_size": 4,
     },
 )
