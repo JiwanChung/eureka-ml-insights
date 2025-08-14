@@ -470,6 +470,7 @@ GLM4_1V_THINKING_9B_CONFIG = ModelConfig(
     {
         "model_name": "zai-org/GLM-4.1V-9B-Thinking",
         "tensor_parallel_size": 4,
+        "max_tokens": 16384,
     },
 )
 
@@ -636,7 +637,8 @@ OVR_7B_COLDSTART_CONFIG = ModelConfig(
     {
         "model_name": "Kangheng/OVR-7B-ColdStart",
         "tensor_parallel_size": 4,
-        "max_tokens": 32000,
+        "max_tokens": 48000,
+        # "max_tokens": 16384,
         # "repetition_penalty": 1.05,
     },
 )
@@ -648,6 +650,7 @@ OVR_7B_RL_CONFIG = ModelConfig(
         "model_name": "Kangheng/OVR-7B-RL",
         "tensor_parallel_size": 4,
         "max_tokens": 48000,
+        # "max_tokens": 16384,
         # "repetition_penalty": 1.05,
     },
 )

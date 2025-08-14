@@ -101,6 +101,35 @@ def extract_boxed_answer(reasoning: str):
         )
 
     if output is None:
+        # vision-r1:
+        pattern = r"\*\*Final Answer:\*\*\s*(.+?)\s*</think>$"
+        matches = re.findall(
+            pattern, reasoning.strip(), flags=re.IGNORECASE | re.DOTALL
+        )
+        output = matches[-1].removeprefix(".") if matches else None
+    if output is None:
+        # vision-r1:
+        pattern = r"\*\*Final Answer:\*\*\s*(.+?)\s*$"
+        matches = re.findall(
+            pattern, reasoning.strip(), flags=re.IGNORECASE | re.DOTALL
+        )
+        output = matches[-1].removeprefix(".") if matches else None
+    if output is None:
+        # vision-r1:
+        pattern = r"\*\*Answer:\*\*\s*(.+?)\s*</think>$"
+        matches = re.findall(
+            pattern, reasoning.strip(), flags=re.IGNORECASE | re.DOTALL
+        )
+        output = matches[-1].removeprefix(".") if matches else None
+    if output is None:
+        # vision-r1:
+        pattern = r"\*\*Answer:\*\*\s*(.+?)\s*$"
+        matches = re.findall(
+            pattern, reasoning.strip(), flags=re.IGNORECASE | re.DOTALL
+        )
+        output = matches[-1].removeprefix(".") if matches else None
+
+    if output is None:
         last = reasoning.strip().split("\n")[-1].removesuffix(".")
         pattern = r"<CONCLUSION>(.+?)</CONCLUSION>"
         matches = re.findall(pattern, last, flags=re.IGNORECASE | re.DOTALL)
