@@ -393,8 +393,9 @@ QVQ72B_LOCAL_CONFIG = ModelConfig(
         "tensor_parallel_size": 8,
         "max_tokens": 32768,
         "top_k": 1,
-        "top_p": 1.0,
-        "repetition_penalty": 1.05,
+        "top_p": 0.001,
+        "temperature": 0.01,
+        # "repetition_penalty": 1.05,
     },
 )
 
@@ -448,10 +449,10 @@ THINKLITE_VL_CONFIG = ModelConfig(
     },
 )
 
-RETHINKER_7B_CONFIG = ModelConfig(
+RETHINKER_72B_CONFIG = ModelConfig(
     LocalVLLMModel,
     {
-        "model_name": "TIGER-Lab/VL-Rethinker-7B",
+        "model_name": "TIGER-Lab/VL-Rethinker-72B",
         "tensor_parallel_size": 4,
     },
 )
