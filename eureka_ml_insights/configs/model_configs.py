@@ -453,7 +453,7 @@ RETHINKER_72B_CONFIG = ModelConfig(
     LocalVLLMModel,
     {
         "model_name": "TIGER-Lab/VL-Rethinker-72B",
-        "tensor_parallel_size": 4,
+        "tensor_parallel_size": 8,
         "max_tokens": 16384,
     },
 )
