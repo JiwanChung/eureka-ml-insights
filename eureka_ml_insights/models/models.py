@@ -889,11 +889,13 @@ class GeminiModel(EndpointModel, KeyBasedAuthMixIn):
     temperature: float = 0
     max_tokens: int = 2000
     top_p: float = 0.95
+    thinking_budget: int = -1  # dynamic thinking
 
     def __post_init__(self):
         super().__post_init__()
-        import google.generativeai as genai
-        from google.generativeai.types import HarmBlockThreshold, HarmCategory
+        from google import genai
+        from google.genai import types
+        from google.genai.types import HarmBlockThreshold, HarmCategory
 
         genai.configure(api_key=self.api_key)
         # Safety config, turning off all filters for direct experimentation with the model only
@@ -907,6 +909,9 @@ class GeminiModel(EndpointModel, KeyBasedAuthMixIn):
             max_output_tokens=self.max_tokens,
             temperature=self.temperature,
             top_p=self.top_p,
+            thinking_config=types.ThinkingConfig(
+                thinking_budget=self.thinking_budget
+            ),  # Disables thinking
         )
 
     def create_request(
@@ -916,7 +921,7 @@ class GeminiModel(EndpointModel, KeyBasedAuthMixIn):
         system_message=None,
         previous_messages=None,
     ):
-        import google.generativeai as genai
+        from google import genai
 
         if self.model_name == "gemini-1.0-pro":
             if system_message:

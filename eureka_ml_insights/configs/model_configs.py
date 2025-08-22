@@ -180,6 +180,46 @@ GEMINI_SECRET_KEY_PARAMS = {
     "key_vault_url": None,
 }
 
+GEMINI_V2_5_FLASH_CONFIG = ModelConfig(
+    GeminiModel,
+    {
+        "model_name": "gemini-2.5-flash",
+        # "secret_key_params": GEMINI_SECRET_KEY_PARAMS,
+        "max_tokens": 16384,
+        "thinking_budget": 0,
+    },
+)
+
+GEMINI_V2_5_FLASH_THINKING_CONFIG = ModelConfig(
+    GeminiModel,
+    {
+        "model_name": "gemini-2.5-flash",
+        # "secret_key_params": GEMINI_SECRET_KEY_PARAMS,
+        "max_tokens": 16384,
+        "thinking_budget": 16384,
+    },
+)
+
+GEMINI_V2_5_PRO_CONFIG = ModelConfig(
+    GeminiModel,
+    {
+        "model_name": "gemini-2.5-pro",
+        # "secret_key_params": GEMINI_SECRET_KEY_PARAMS,
+        "max_tokens": 16384,
+        "thinking_budget": 0,
+    },
+)
+
+GEMINI_V2_5_PRO_THINKING_CONFIG = ModelConfig(
+    GeminiModel,
+    {
+        "model_name": "gemini-2.5-pro",
+        # "secret_key_params": GEMINI_SECRET_KEY_PARAMS,
+        "max_tokens": 16384,
+        "thinking_budget": 16384,
+    },
+)
+
 GEMINI_V2_FLASH_THINKING_EXP_0121_CONFIG = ModelConfig(
     GeminiModel,
     {
