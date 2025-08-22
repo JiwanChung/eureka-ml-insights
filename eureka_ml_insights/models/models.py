@@ -78,8 +78,12 @@ class KeyBasedAuthMixIn:
 
     def __post_init__(self):
         if self.api_key is None and self.secret_key_params is None:
-            raise ValueError("Either api_key or secret_key_params must be provided.")
-        self.api_key = self.get_api_key()
+            if "gemini" not in self.model_name:
+                raise ValueError(
+                    "Either api_key or secret_key_params must be provided."
+                )
+        if "gemini" not in self.model_name:
+            self.api_key = self.get_api_key()
 
     def get_api_key(self):
         """
@@ -897,7 +901,7 @@ class GeminiModel(EndpointModel, KeyBasedAuthMixIn):
         from google.genai import types
         from google.genai.types import HarmBlockThreshold, HarmCategory
 
-        genai.configure(api_key=self.api_key)
+        # genai.configure(api_key=self.api_key)
         # Safety config, turning off all filters for direct experimentation with the model only
         self.safety_settings = {
             HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
@@ -905,7 +909,7 @@ class GeminiModel(EndpointModel, KeyBasedAuthMixIn):
             HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
             HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
         }
-        self.gen_config = genai.GenerationConfig(
+        self.gen_config = types.GenerateContentConfig(
             max_output_tokens=self.max_tokens,
             temperature=self.temperature,
             top_p=self.top_p,

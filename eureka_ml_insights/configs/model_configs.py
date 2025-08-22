@@ -176,7 +176,7 @@ OAI_GPT4O_MINI_2024_07_18_CONFIG = ModelConfig(
 # Gemini models
 GEMINI_SECRET_KEY_PARAMS = {
     "key_name": "your_gemini_secret_key_name",
-    "local_keys_path": "keys/keys.json",
+    "local_keys_path": "./my-sa-key.json",
     "key_vault_url": None,
 }
 
