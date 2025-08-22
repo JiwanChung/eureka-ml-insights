@@ -1,5 +1,6 @@
 """This module contains classes for interacting with various models, including API-based models and HuggingFace models."""
 
+import os
 from typing import Optional
 import json
 import pandas as pd
@@ -927,14 +928,18 @@ class GeminiModel(EndpointModel, KeyBasedAuthMixIn):
     ):
         from google import genai
 
-        if self.model_name == "gemini-1.0-pro":
-            if system_message:
-                logging.warning("System messages are not supported for Gemini 1.0 Pro.")
-            self.model = genai.GenerativeModel(self.model_name)
-        else:
-            self.model = genai.GenerativeModel(
-                self.model_name, system_instruction=system_message
-            )
+        with open(os.environ["GOOGLE_APPLICATION_CREDENTIALS"]) as f:
+            cred = json.load(f)
+        self.client = genai.Client(project=cred["project_id"], location="us-central1")
+
+        # if self.model_name == "gemini-1.0-pro":
+        #     if system_message:
+        #         logging.warning("System messages are not supported for Gemini 1.0 Pro.")
+        #     self.model = genai.GenerativeModel(self.model_name)
+        # else:
+        #     self.model = genai.GenerativeModel(
+        #         self.model_name, system_instruction=system_message
+        #     )
 
         if query_images:
             return [text_prompt] + query_images
@@ -945,14 +950,18 @@ class GeminiModel(EndpointModel, KeyBasedAuthMixIn):
         start_time = time.time()
         gemini_response = None
         try:
-            gemini_response = self.model.generate_content(
-                request,
-                generation_config=self.gen_config,
-                request_options={"timeout": self.timeout},
-                safety_settings=self.safety_settings,
+            gemini_response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=request,
+                config=self.gen_config,
+                # request_options={"timeout": self.timeout},
+                # safety_settings=self.safety_settings,
             )
             end_time = time.time()
-            model_output = gemini_response.parts[0].text
+            model_output = [
+                cand.content.parts[0].text for cand in gemini_response.candidates
+            ][0]
+
             response_time = end_time - start_time
         except Exception as e:
             self.handle_gemini_error(e, gemini_response)
