@@ -42,9 +42,7 @@ from eureka_ml_insights.configs import ExperimentConfig
 
 class MATHLENS_PIPELINE(ExperimentConfig):
     # mathlens_data_path: str = "../mathlens"
-    mathlens_data_path: str = os.environ.get(
-        "MATHLENS_PATH", "microsoft/mathlens"
-    )  # "../mm_reasoning/data/data/ours/geometry/mathlens"
+    mathlens_data_path: str = os.environ.get("MATHLENS_PATH", "microsoft/mathlens")
 
     mathlens_setup_name: str = ""  # default
     mathlens_data_split: str = "test"
@@ -289,3 +287,37 @@ class MATHLENS_PERCEPTIONBASEDEBUG_PIPELINE(MATHLENS_PERCEPTIONBASE_PIPELINE):
 class MATHLENS_DEBUG_PIPELINE(MATHLENS_PIPELINE):
     mathlens_setup_name: str = "DEBUG"
     debug_samples: int = 8
+
+
+class MATHLENS_GENERAL_PIPELINE(MATHLENS_PIPELINE):
+    mathlens_data_path: str = os.environ.get(
+        "MATHLENS_GENERAL_PATH", "microsoft/mathlens_general"
+    )
+    mathlens_setup_name: str = "GENERAL"
+
+
+class MATHLENS_GENERAL_TEXTBASE_PIPELINE(MATHLENS_GENERAL_PIPELINE):
+    mathlens_setup_name: str = "GENERAL_TEXTBASE"
+    mathlens_data_split: str = "test"
+    mathlens_question_key: str = "query_text_cot"
+    mathlens_use_images: bool = False
+
+    modification_type: str = "base"
+
+
+class MATHLENS_GENERAL_TEXTONLYBASE_PIPELINE(MATHLENS_GENERAL_PIPELINE):
+    mathlens_setup_name: str = "GENERAL_TEXTONLYBASE"
+    mathlens_data_split: str = "test"
+    mathlens_question_key: str = "query_vis_cot"
+    mathlens_use_images: bool = False
+
+    modification_type: str = "base"
+
+
+class MATHLENS_GENERAL_PERCEPTIONBASE_PIPELINE(MATHLENS_GENERAL_PIPELINE):
+    mathlens_setup_name: str = "GENERAL_PERCEPTIONBASE"
+    mathlens_data_split: str = "perception"
+    mathlens_question_key: str = "query_cot"
+    mathlens_per_key_aggregation: list[tuple[str, str]] = [("image_key", "min")]
+
+    mathlens_data_split: str = "perception_base_choice"
