@@ -196,7 +196,8 @@ GEMINI_V2_5_FLASH_THINKING_CONFIG = ModelConfig(
         "model_name": "gemini-2.5-flash",
         # "secret_key_params": GEMINI_SECRET_KEY_PARAMS,
         "max_tokens": 16384,
-        "thinking_budget": 16384,
+        # "thinking_budget": 16384,
+        "thinking_budget": 5000,
     },
 )
 
@@ -216,7 +217,8 @@ GEMINI_V2_5_PRO_THINKING_CONFIG = ModelConfig(
         "model_name": "gemini-2.5-pro",
         # "secret_key_params": GEMINI_SECRET_KEY_PARAMS,
         "max_tokens": 16384,
-        "thinking_budget": 16384,
+        # "thinking_budget": 16384,
+        "thinking_budget": 5000,
     },
 )
 

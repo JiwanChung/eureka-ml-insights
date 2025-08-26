@@ -958,6 +958,7 @@ class GeminiModel(EndpointModel, KeyBasedAuthMixIn):
                 # safety_settings=self.safety_settings,
             )
             end_time = time.time()
+
             model_output = [
                 cand.content.parts[0].text for cand in gemini_response.candidates
             ][0]

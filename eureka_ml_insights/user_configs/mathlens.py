@@ -210,6 +210,11 @@ class MATHLENS_QUERAW_PIPELINE(MATHLENS_PIPELINE):
     mathlens_question_key: str = "query_raw_cot"
 
 
+class MATHLENS_MAINBASE_PIPELINE(MATHLENS_PIPELINE):
+    mathlens_setup_name: str = "MAINBASE"
+    modification_type: str = "base"
+
+
 class MATHLENS_TEXT_PIPELINE(MATHLENS_PIPELINE):
     mathlens_setup_name: str = "TEXT"
     mathlens_data_split: str = "test"
