@@ -302,7 +302,7 @@ CLAUDE_4_SONNET_THINKING_CONFIG = ModelConfig(
         "secret_key_params": CLAUDE_SECRET_KEY_PARAMS,
         "model_name": "claude-sonnet-4-20250514",
         "thinking_enabled": True,
-        "thinking_budget": 5000,
+        "thinking_budget": 30720,
         "max_tokens": 32768,  # This number should always be higher than the thinking budget
         # "temperature": 1.0,  # As of 03/08/2025, thinking only works with temperature 1.0
         "timeout": 600,  # We set a timeout of 10 minutes for thinking
