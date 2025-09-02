@@ -292,7 +292,7 @@ CLAUDE_4_SONNET_CONFIG = ModelConfig(
         "thinking_enabled": False,
         "max_tokens": 32768,  # This number should always be higher than the thinking budget
         # "temperature": 1.0,  # As of 03/08/2025, thinking only works with temperature 1.0
-        "timeout": 600,  # We set a timeout of 10 minutes for thinking
+        # "timeout": 600,  # We set a timeout of 10 minutes for thinking
     },
 )
 
@@ -304,7 +304,7 @@ CLAUDE_4_SONNET_THINKING_CONFIG = ModelConfig(
         "thinking_enabled": True,
         "thinking_budget": 30720,
         "max_tokens": 32768,  # This number should always be higher than the thinking budget
-        # "temperature": 1.0,  # As of 03/08/2025, thinking only works with temperature 1.0
+        "temperature": 1.0,  # As of 03/08/2025, thinking only works with temperature 1.0
         "timeout": 600,  # We set a timeout of 10 minutes for thinking
     },
 )
