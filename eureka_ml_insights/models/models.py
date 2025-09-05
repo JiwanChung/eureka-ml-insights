@@ -1913,7 +1913,7 @@ class ClaudeReasoningModel(ClaudeModel):
         thinking = (
             {"type": "enabled", "budget_tokens": self.thinking_budget}
             if self.thinking_enabled
-            else None
+            else {"type": "disabled"}
         )
         completion = self.client.messages.create(
             model=self.model_name,
