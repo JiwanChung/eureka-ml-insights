@@ -100,6 +100,14 @@ OAI_O3_MINI_CONFIG = ModelConfig(
     },
 )
 
+OAI_O3_CONFIG = ModelConfig(
+    AzureOpenAIOModel,
+    {
+        "model_name": "o3_2025-04-16",
+        "secret_key_params": OPENAI_SECRET_KEY_PARAMS,
+    },
+)
+
 OAI_O1_CONFIG = ModelConfig(
     DirectOpenAIOModel,
     {
@@ -162,6 +170,7 @@ OAI_GPT4O_2024_11_20_CONFIG = ModelConfig(
     {
         "model_name": "gpt-4o-2024-11-20",
         "secret_key_params": OPENAI_SECRET_KEY_PARAMS,
+        "max_tokens": 16384,
     },
 )
 
